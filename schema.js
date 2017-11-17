@@ -5,7 +5,8 @@ var Sequelize = require('sequelize'),
 
         pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
 
-        storage: 'sqlite.db'
+        storage: 'sqlite.db',
+        logging: false,
     }),
 
     REGIONS = Sequelize.ENUM('FLA KEYS', 'DRY TORT', 'SEFCRI'),
@@ -27,11 +28,10 @@ var Sequelize = require('sequelize'),
         number: { type: Sequelize.INTEGER },
         protected: { type: Sequelize.BOOLEAN },
         region: { type: REGIONS },
-        station: { type: Sequelize.INTEGER },
     }, {
         indexes: [{
             unique: true,
-            fields: ['region', 'date', 'latitude', 'longitude', 'species_code', 'station']
+            fields: ['region', 'date', 'latitude', 'longitude', 'species_code', 'length']
         }]
     }),
 
