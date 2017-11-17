@@ -2,16 +2,30 @@ var csv = require('fast-csv'),
 
     schema = require ('./schema.js'),
 
-    DATA_PATH = 'data/';
+    DATA_PATH = 'data/'
+
+    read = 0, written = 0;
 
 function importRecords(csvFile, Model, convert) {
     return new Promise((resolve, reject) => {
-        var count = 0;
+        var count = 0,
+            converted;
 
         csv.fromPath(DATA_PATH + csvFile, { headers: true })
             .on('data', (rec) => {
-                Model.create(convert(rec));
-                count++;
+                converted = convert(rec);
+
+                read++;
+                if (read && read % 1000 === 0) { console.log('Read: %d', read); }
+
+                if (converted) {
+                    Model.create(converted);
+                    count++;
+
+                    written++
+                    if (written && written % 100 === 0) { console.log('Written: %d', written); }
+                }
+
             })
             .on('end', () => { resolve(count); })
             .on('error', (e) => { reject(e); });
@@ -44,21 +58,22 @@ function speciesFromRecord(record) {
         family: record.FAMILY,
         scientificName: record.SCINAME,
         commonName: record.COMNAME,
-        minLength: Number(record.LC),
-        medLength: Number(record.LM),
+        minLength: +record.LC,
+        medLength: +record.LM,
     }
 }
 function sampleFromRecord(record) {
-    return {
-        date: new Date(record.YEAR, record.MONTH, record.DAY),
-        latitude: record.LAT_DEGREES,
-        longitude: record.LON_DEGREES,
-        depth: record.DEPTH,
-        length: record.LEN,
-        number: record.NUM,
-        protected: record.PROT,
-        region: record.REGION,
-        station: record.STATION_NR,
+    if (+record.NUM) {
+        return {
+            date: new Date(record.YEAR, record.MONTH, record.DAY),
+            latitude: +record.LAT_DEGREES,
+            longitude: +record.LON_DEGREES,
+            depth: +record.DEPTH,
+            length: +record.LEN,
+            number: +record.NUM,
+            protected: !!record.PROT,
+            region: record.REGION,
+        }
     }
 }
 
@@ -66,8 +81,13 @@ function sampleFromRecord(record) {
 // importSampleRecords('fk2016.csv').then(() => {
 
 // })
-importSpeciesRecords('taxonomic_data.csv').then(() => {
-    schema.Species.findOne().then((s) => {
+schema.Sample.sync({force: true})
+    .then(() => {
+        return importSampleRecords('fk2016.csv')
+    }).then((total) => {
+        console.log('Total: %d', total);
+        return schema.Sample.findOne();
+    }).then((s) => {
         console.log(s.dataValues);
+        process.exit();
     });
-})
