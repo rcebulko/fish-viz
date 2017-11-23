@@ -13,7 +13,6 @@ The flag `--log-sql` may be added to the invocation of any file to enabled loggi
     - `--sample`: imports sample data
     - `--port`: if provided, starts the server in the background on the given port
 
-
-To initialize database, run 'node schema [--species] [--sample]'
-To import data into empty tables, run 'node import_data [--species] [--sample]'
-Add the flag `--log-sql` to print SQL statements to stdout
+## api.js
+`> node api [--port <port>]`
+    - `--port`: starts the server on the given port (default 90)
