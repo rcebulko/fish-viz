@@ -12,14 +12,6 @@ var Sequelize = require('sequelize'),
 
     REGIONS = Sequelize.ENUM('FLA KEYS', 'DRY TORT', 'SEFCRI'),
 
-    // deprecated
-    // SampleSet = db.define('sample_set', {
-    //     region: { type: REGIONS, unique: 'sampling'},
-    //     year: { type: Sequelize.INTEGER, unique: 'sampling' },
-    //     dataFile: { type: Sequelize.STRING, field: 'data_file' },
-    //     count: { type: Sequelize.INTEGER, field: 'sample_count' },
-    // }),
-
     Sample = db.define('sample', {
         species_code: { type: Sequelize.STRING },
         date: { type: Sequelize.DATE },
@@ -50,11 +42,11 @@ var Sequelize = require('sequelize'),
 
 Species.hasMany(Sample, { foreignKey: 'species_code', sourceKey: 'code' });
 Sample.belongsTo(Species, { foreignKey: 'species_code', sourceKey: 'code' });
-// SampleSet.hasMany(Sample, { onDelete: 'cascade' });
 
 
 module.exports = { db, Sample, Species }
 
+// `node schema Sample` --> resets the `samples` table
 if (require.main == module) {
     process.argv.slice(2).forEach(modelName => {
         Model = module.exports[modelName];
