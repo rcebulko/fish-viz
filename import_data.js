@@ -5,7 +5,7 @@ var csv = require('fast-csv'),
 
     schema = require('./schema.js'),
 
-    API_PATH = 'https://grunt.sefsc.noaa.gov/rvc_analysis20',
+    DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
 
     READ_LOG_INTERVAL = 10000,
     WRITE_BATCH_SIZE = 10000;
@@ -108,9 +108,9 @@ function sampleFromRecord(record) {
 
 
 Promise.all([
-    importSpeciesRecords(fs.createReadStream('data/taxonomic_data.csv'))
+    importSpeciesRecords(fs.createReadStream(DATA_PATH + 'taxa.csv'))
         .then(total => { console.log('Total species: %d', total); }),
-    importSampleRecords(fs.createReadStream('data/fk2016.csv'))
+    importSampleRecords(fs.createReadStream(DATA_PATH + 'samples.csv'))
         .then(total => { console.log('Total samples: %d', total); })
 ]).then(() => {
     process.exit();
