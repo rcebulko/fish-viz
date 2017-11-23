@@ -117,7 +117,7 @@ function importSpecies(filename) {
 }
 
 function importSamples(filename) {
-    return schema.Samples.sync({ force: true })
+    return schema.Sample.sync({ force: true })
         .then(() => {
             return importSampleRecords(fs.createReadStream(DATA_PATH + filename));
         }).then(total => {
