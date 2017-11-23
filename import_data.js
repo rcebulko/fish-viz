@@ -10,7 +10,7 @@ var csv = require('fast-csv'),
     WRITE_BATCH_SIZE = 10000,
 
     argv = require('minimist')(process.argv.slice(2), {
-        boolean: ['species', 'samples']
+        boolean: ['species', 'samples'],
     });
 
 
@@ -126,21 +126,35 @@ function importSamples(filename) {
         });
 }
 
+
 // `node import_data --species` --> imports species data
 // `node import_data --sample` --> imports sample data
 if (require.main === module) {
     var imports = [],
-        args = process.argv.slice(2);
+        args = process.argv.slice(2),
+        importComplete = () => {
+            if (!argv['port']) {
+                process.exit();
+            } else {
+                console.log('Import complete! Server will remain online.');
+            }
+        };
 
     if (argv['species']) { imports.push(importSpecies('taxa.csv')); }
     if (argv['samples']) { imports.push(importSamples('samples.csv')); }
 
-    Promise.all(imports).then(() => {
-        process.exit();
-    }, e => {
+    // optionally run API server while import is in progress
+    if (argv['port']) {
+        Promise.all([Species.sync(), Sample.sync()]).then(() => {
+            require('./api').start(+argv['port']);
+        });
+    }
+
+    Promise.all(imports).then(importComplete, e => {
         console.error(e);
-        process.exit();
+        importComplete()
     });
+
 }
 
 module.exports = { importSpecies, importSamples }

@@ -8,9 +8,10 @@ The flag `--log-sql` may be added to the invocation of any file to enabled loggi
     - `--samples`: creates/re-creates the `samples` table
 
 ## import_data.js
-`> node import_data [--species] [--samples]`
+`> node import_data [--species] [--samples] [--port <port>]`
     - `--species`: imports species data
     - `--sample`: imports sample data
+    - `--port`: if provided, starts the server in the background on the given port
 
 
 To initialize database, run 'node schema [--species] [--sample]'
