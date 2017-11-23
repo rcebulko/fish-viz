@@ -131,7 +131,8 @@ if (require.main == module) {
 
     if (args.indexOf('--species') !== -1) {
         imports.push(importSpecies('taxa.csv'));
-    } else if (args.indexOf('--samples') !== -1) {
+    }
+    if (args.indexOf('--samples') !== -1) {
         imports.push(importSamples('samples.csv'));
     }
 
