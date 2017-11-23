@@ -1,13 +1,16 @@
-var express = require('express'),
-    http = require('http'),
-    seqRouter = require('sequelize-router'),
+var http = require('http'),
+    sqlRouter = require('sequelize-router'),
 
-    schema = require('./schema')
-
+    express = require('express'),
     app = express(),
 
-    PORT = 90;
+    schema = require('./schema'),
 
+    argv = require('minimist')(process.argv.slice(2), {
+        default: { port: 90 }
+    });
+
+// generate the modified find function for the sequel router to enable limiting
 function findAllLimit(Model) {
     return (req, res) => {
         var limit = req.query.limit;
@@ -24,13 +27,23 @@ function findAllLimit(Model) {
     }
 }
 
-app.use('/api', seqRouter(schema.Species, {
+// establish API endpoints for each model
+app.use('/api', sqlRouter(schema.Species, {
     find: findAllLimit(schema.Species)
 }));
-app.use('/api', seqRouter(schema.Sample), {
+app.use('/api', sqlRouter(schema.Sample, {
     find: findAllLimit(schema.Sample)
-});
+}));
+app.use(express.static('public'));
 
-http.createServer(app).listen(PORT, function () {
-    console.log('Express server listening on port ' + PORT);
-})
+// start the API listening on port `port`
+function start(port) {
+    http.createServer(app).listen(port, function () {
+        console.log('Express server listening on port ' + port);
+    });
+};
+
+if (require.main === module) {
+    start(argv['port']);
+}
+module.exports = { start }

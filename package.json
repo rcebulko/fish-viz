@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "fast-csv": "^2.4.1",
+    "minimist": "^1.2.0",
     "request": "^2.83.0",
     "restful-express-sequelize": "^1.2.1",
     "sequelize-router": "^1.0.6",
