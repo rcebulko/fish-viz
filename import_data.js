@@ -28,9 +28,14 @@ function importRecords(csvStream, Model, convert) {
 
             insertAll = () => {
                 inserts.push(
-                    Model.bulkCreate(built).then(results => {
+                    Model.bulkCreate(built, {
+                        ignoreDuplicates: true
+                    }).then(results => {
                         written += results.length;
                         console.log('Written (%s): %d', Model.name, written);
+                    }, error => {
+                        console.log(error);
+                        process.exit();
                     })
                 );
 
@@ -81,7 +86,7 @@ function importSampleRecords(csvFile) {
 function speciesFromRecord(record) {
     if (record.SPECIES_CD) {
         return {
-            species_code: record.SPECIES_CD,
+            code: record.SPECIES_CD,
             species: record.SCINAME.split(' ')[1],
             genus: record.SCINAME.split(' ')[0],
             family: record.FAMILY,
@@ -96,6 +101,8 @@ function speciesFromRecord(record) {
 function sampleFromRecord(record) {
     if (+record.NUM) {
         return {
+            species_code: record.SPECIES_CD,
+            region: record.REGION,
             date: new Date(record.YEAR, record.MONTH, record.DAY),
             latitude: +record.LAT_DEGREES,
             longitude: +record.LON_DEGREES,
@@ -103,7 +110,6 @@ function sampleFromRecord(record) {
             length: +record.LEN,
             number: +record.NUM,
             protected: !!record.PROT,
-            region: record.REGION,
         }
     }
 }
