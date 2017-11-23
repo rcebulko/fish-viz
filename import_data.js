@@ -23,10 +23,8 @@ function importRecords(csvStream, Model, convert) {
             converted,
 
             insertAll = () => {
-                console.log(built[0]);
                 inserts.push(
                     Model.bulkCreate(built).then(results => {
-                        console.log(results[0].dataValues);
                         written += results.length;
                         console.log('Written (%s): %d', Model.name, written);
                     })
@@ -133,7 +131,8 @@ if (require.main == module) {
 
     if (args.indexOf('--species') !== -1) {
         imports.push(importSpecies('taxa.csv'));
-    } else if (args.indexOf('--samples') !== -1) {
+    }
+    if (args.indexOf('--samples') !== -1) {
         imports.push(importSamples('samples.csv'));
     }
 
