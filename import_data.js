@@ -1,45 +1,61 @@
 var csv = require('fast-csv'),
+    fs = require('fs'),
+    request = require('request'),
+    Transaction = require('sequelize').Transaction,
 
-    schema = require ('./schema.js'),
+    schema = require('./schema.js'),
 
-    DATA_PATH = 'data/'
+    API_PATH = 'https://grunt.sefsc.noaa.gov/rvc_analysis20',
 
-    read = 0, written = 0;
+    read = 0, written = 0,
+    READ_LOG_INTERVAL = 10000
+    WRITE_BATCH_SIZE = 10000;
 
-function importRecords(csvFile, Model, convert) {
+function importRecords(csvStream, Model, convert) {
+    var inserts = [];
+
     return new Promise((resolve, reject) => {
         var count = 0,
+            built = [],
+            inserts = [],
             converted;
 
-        csv.fromPath(DATA_PATH + csvFile, { headers: true })
-            .on('data', (rec) => {
+        csv.fromStream(csvStream, { headers: true })
+            .on('data', rec => {
                 converted = convert(rec);
 
                 read++;
-                if (read && read % 1000 === 0) { console.log('Read: %d', read); }
-
-                if (converted) {
-                    Model.create(converted);
-                    count++;
-
-                    written++
-                    if (written && written % 100 === 0) { console.log('Written: %d', written); }
+                if (read && read % READ_LOG_INTERVAL === 0) {
+                    console.log('Read: %d', read);
                 }
 
-            })
-            .on('end', () => { resolve(count); })
-            .on('error', (e) => { reject(e); });
-    }).then((count) => {
-        return new Promise((resolve, reject) => {
-            Model.count().then((total) => {
-                resolve(count, total);
-            }, reject )
-        });
-    }).then((count, total) => {
-        console.log('Added %d records\nTotal of %d records',
-            count, total);
+                if (converted) {
+                    built.push(Model.build(converted));
+                    count++;
 
-        return total
+                    if (count && count % WRITE_BATCH_SIZE === 0) {
+                        inserts.push(
+                            Model.bulkCreate(built).then(results => {
+                                written += results.length;
+                                console.log('Written: %d', written);
+                            })
+                        );
+
+                        built = []
+                    }
+                }
+            })
+            .on('end', () => {
+                Model.bulkCreate(inserts).then(results => {
+                 resolve(results.length);
+             })
+            }).on('error', e => {
+                console.error(e);
+                reject(e);
+            });
+    }).then((count) => {
+        console.log('Added %d', count)
+        return Model.count();
     });
 }
 
@@ -51,15 +67,17 @@ function importSampleRecords(csvFile) {
 }
 
 function speciesFromRecord(record) {
-    return {
-        code: record.SPECIES_CD,
-        species: record.SPECIES_CD.split(' ')[1],
-        genus: record.SPECIES_CD.split(' ')[0],
-        family: record.FAMILY,
-        scientificName: record.SCINAME,
-        commonName: record.COMNAME,
-        minLength: +record.LC,
-        medLength: +record.LM,
+    if (record.SPECIES_CD) {
+        return {
+            code: record.SPECIES_CD,
+            species: record.SCINAME.split(' ')[1],
+            genus: record.SCINAME.split(' ')[0],
+            family: record.FAMILY,
+            scientificName: record.SCINAME,
+            commonName: record.COMNAME,
+            minLength: +record.LC,
+            medLength: +record.LM,
+        }
     }
 }
 function sampleFromRecord(record) {
@@ -77,17 +95,68 @@ function sampleFromRecord(record) {
     }
 }
 
+// deprecated
+// function sampleSetUrl(region, year) {
+//     return API_PATH + '/samples' +
+//         '?region=' + region.replace(/ /g, '+') +
+//         '&year=' + year +
+//         '&format=csv&commit=Download';
+// }
 
-// importSampleRecords('fk2016.csv').then(() => {
+// deprecated; multi-file use
+// function importSampleSet(region, year) {
+//     var url = sampleSetUrl(region, year);
 
-// })
-schema.Sample.sync({force: true})
+//     console.log('Fetching `%s`...', url);
+
+//     return schema.db.transaction({
+//         isolationLevel: Transaction.ISOLATION_LEVELS.SERIALIZABLE
+//     }, transaction => {
+//         return schema.SampleSet.create({
+//             region: region,
+//             year: year,
+//             dataFile: url,
+//         }).then(ss => {
+//             return importSampleRecords(request(ss.dataFile))
+//                 .then(total => {
+//                     console.log('Total: %d', total);
+//                     return ss.updateAttributes({ total: total });
+//                 }, error => {
+//                     ss.destroy().then(() => { throw error; })
+//                 });
+//         });
+//     }).then(() => {
+//         return schema.Sample.findOne();
+//     }).then(s => {
+//         console.log(s.dataValues);
+//     });
+// }
+
+function importSpecies() {
+    return schema.Species.sync({ force: true })
+        .then(() => {
+            return request(API_PATH + '/taxa.csv?commit=Download');
+        }).then(importSpeciesRecords)
+        .then(total => {
+            console.log('Total: %d', total);
+            return schema.Species.findOne();
+        }).then(s => {
+            console.log(s.dataValues);
+        });
+}
+
+// importSampleSet('FLA KEYS', 2016).then(
+//     () => { process.exit(); },
+//     (e) => {
+//         console.error(e);
+//         process.exit();
+//     })
+
+importSampleRecords(fs.createReadStream('data/fk2016.csv'))
+    .then(total => { console.log('Total: %d', total); })
     .then(() => {
-        return importSampleRecords('fk2016.csv')
-    }).then((total) => {
-        console.log('Total: %d', total);
-        return schema.Sample.findOne();
-    }).then((s) => {
-        console.log(s.dataValues);
+        process.exit();
+    }, e => {
+        console.error(e);
         process.exit();
     });
