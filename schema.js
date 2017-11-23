@@ -7,7 +7,7 @@ var Sequelize = require('sequelize'),
         pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
 
         storage: 'sqlite.db',
-        logging: false,
+        logging: process.argv.indexOf('--log-sql') !== -1,
     }),
 
     REGIONS = Sequelize.ENUM('FLA KEYS', 'DRY TORT', 'SEFCRI'),
@@ -48,10 +48,8 @@ module.exports = { db, Sample, Species }
 
 // `node schema Sample` --> resets the `samples` table
 if (require.main == module) {
-    process.argv.slice(2).forEach(modelName => {
-        Model = module.exports[modelName];
-        if (typeof Model !== 'undefined') {
-            Model.sync({ force: true });
-        }
+    process.argv.slice(2).forEach(arg => {
+        if (arg === '--species') { Species.sync({ force: true }); }
+        if (arg === '--samples') { Sample.sync({ force: true }); }
     })
 }

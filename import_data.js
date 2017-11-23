@@ -20,39 +20,39 @@ function importRecords(csvStream, Model, convert) {
             written = 0,
             built = [],
             inserts = [],
-            converted;
+            converted,
+
+            insertAll = () => {
+                console.log(built[0]);
+                inserts.push(
+                    Model.bulkCreate(built).then(results => {
+                        console.log(results[0].dataValues);
+                        written += results.length;
+                        console.log('Written (%s): %d', Model.name, written);
+                    })
+                );
+
+                built = [];
+            };
 
         csv.fromStream(csvStream, {  headers: true }).on('data', rec => {
             converted = convert(rec);
 
             read++;
-            if (read && read % READ_LOG_INTERVAL === 0) {
+            if (read % READ_LOG_INTERVAL === 0) {
                 console.log('Read (%s): %d', Model.name, read);
             }
 
             if (converted) {
-                built.push(Model.build(converted));
+                built.push(converted);
                 count++;
 
-                if (count && count % WRITE_BATCH_SIZE === 0) {
-                    inserts.push(
-                        Model.bulkCreate(built).then(results => {
-                            written += results.length;
-                            console.log('Written (%s): %d', Model.name, written);
-                        })
-                    );
-
-                    built = []
+                if (count % WRITE_BATCH_SIZE === 0) {
+                    insertAll();
                 }
             }
         }).on('end', () => {
-            inserts.push(
-                Model.bulkCreate(built).then(results => {
-                    written += results.length;
-                    console.log('Written (%s): %d', Model.name, written);
-                })
-            );
-
+            insertAll()
             Promise.all(inserts).then(() => { resolve(written); });
         }).on('data-invalid', badData => {
             console.error('Invalid data:', badData);
@@ -107,14 +107,42 @@ function sampleFromRecord(record) {
 }
 
 
-Promise.all([
-    importSpeciesRecords(fs.createReadStream(DATA_PATH + 'taxa.csv'))
-        .then(total => { console.log('Total species: %d', total); }),
-    importSampleRecords(fs.createReadStream(DATA_PATH + 'samples.csv'))
-        .then(total => { console.log('Total samples: %d', total); })
-]).then(() => {
-    process.exit();
-}, e => {
-    console.error(e);
-    process.exit();
-});
+function importSpecies(filename) {
+    return schema.Species.sync({ force: true })
+        .then(() => {
+            return importSpeciesRecords(fs.createReadStream(DATA_PATH + filename));
+        }).then(total => {
+            console.log('Total species: %d', total);
+        });
+}
+
+function importSamples(filename) {
+    return schema.Samples.sync({ force: true })
+        .then(() => {
+            return importSampleRecords(fs.createReadStream(DATA_PATH + filename));
+        }).then(total => {
+            console.log('Total samples: %d', total);
+        });
+}
+
+// `node import_data --species` --> imports species data
+// `node import_data --sample` --> imports sample data
+if (require.main == module) {
+    var imports = [],
+        args = process.argv.slice(2);
+
+    if (args.indexOf('--species') !== -1) {
+        imports.push(importSpecies('taxa.csv'));
+    } else if (args.indexOf('--samples') !== -1) {
+        imports.push(importSamples('samples.csv'));
+    }
+
+    Promise.all(imports).then(() => {
+        process.exit();
+    }, e => {
+        console.error(e);
+        process.exit();
+    });
+}
+
+
