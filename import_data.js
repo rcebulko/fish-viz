@@ -1,67 +1,96 @@
 var csv = require('fast-csv'),
+    fs = require('fs'),
+    request = require('request'),
+    Transaction = require('sequelize').Transaction,
 
-    schema = require ('./schema.js'),
+    schema = require('./schema.js'),
 
-    DATA_PATH = 'data/'
+    DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
 
-    read = 0, written = 0;
+    READ_LOG_INTERVAL = 10000,
+    WRITE_BATCH_SIZE = 10000;
 
-function importRecords(csvFile, Model, convert) {
+
+function importRecords(csvStream, Model, convert) {
+    var inserts = [];
+
     return new Promise((resolve, reject) => {
         var count = 0,
+            read = 0,
+            written = 0,
+            built = [],
+            inserts = [],
             converted;
 
-        csv.fromPath(DATA_PATH + csvFile, { headers: true })
-            .on('data', (rec) => {
-                converted = convert(rec);
+        csv.fromStream(csvStream, {  headers: true }).on('data', rec => {
+            converted = convert(rec);
 
-                read++;
-                if (read && read % 1000 === 0) { console.log('Read: %d', read); }
+            read++;
+            if (read && read % READ_LOG_INTERVAL === 0) {
+                console.log('Read (%s): %d', Model.name, read);
+            }
 
-                if (converted) {
-                    Model.create(converted);
-                    count++;
+            if (converted) {
+                built.push(Model.build(converted));
+                count++;
 
-                    written++
-                    if (written && written % 100 === 0) { console.log('Written: %d', written); }
+                if (count && count % WRITE_BATCH_SIZE === 0) {
+                    inserts.push(
+                        Model.bulkCreate(built).then(results => {
+                            written += results.length;
+                            console.log('Written (%s): %d', Model.name, written);
+                        })
+                    );
+
+                    built = []
                 }
+            }
+        }).on('end', () => {
+            inserts.push(
+                Model.bulkCreate(built).then(results => {
+                    written += results.length;
+                    console.log('Written (%s): %d', Model.name, written);
+                })
+            );
 
-            })
-            .on('end', () => { resolve(count); })
-            .on('error', (e) => { reject(e); });
-    }).then((count) => {
-        return new Promise((resolve, reject) => {
-            Model.count().then((total) => {
-                resolve(count, total);
-            }, reject )
+            Promise.all(inserts).then(() => { resolve(written); });
+        }).on('data-invalid', badData => {
+            console.error('Invalid data:', badData);
+        }).on('error', e => {
+            console.error(e);
+            reject(e);
         });
-    }).then((count, total) => {
-        console.log('Added %d records\nTotal of %d records',
-            count, total);
-
-        return total
+    }).then((count) => {
+        console.log('Added %d', count)
+        return Model.count();
     });
 }
+
 
 function importSpeciesRecords(csvFile) {
     return importRecords(csvFile, schema.Species, speciesFromRecord);
 }
+
 function importSampleRecords(csvFile) {
     return importRecords(csvFile, schema.Sample, sampleFromRecord);
 }
 
+
 function speciesFromRecord(record) {
-    return {
-        code: record.SPECIES_CD,
-        species: record.SPECIES_CD.split(' ')[1],
-        genus: record.SPECIES_CD.split(' ')[0],
-        family: record.FAMILY,
-        scientificName: record.SCINAME,
-        commonName: record.COMNAME,
-        minLength: +record.LC,
-        medLength: +record.LM,
+    if (record.SPECIES_CD) {
+        return {
+            code: record.SPECIES_CD,
+            species: record.SCINAME.split(' ')[1],
+            genus: record.SCINAME.split(' ')[0],
+            family: record.FAMILY,
+            scientificName: record.SCINAME,
+            commonName: record.COMNAME,
+            minLength: +record.LC,
+            medLength: +record.LM,
+        }
     }
 }
+
 function sampleFromRecord(record) {
     if (+record.NUM) {
         return {
@@ -78,16 +107,14 @@ function sampleFromRecord(record) {
 }
 
 
-// importSampleRecords('fk2016.csv').then(() => {
-
-// })
-schema.Sample.sync({force: true})
-    .then(() => {
-        return importSampleRecords('fk2016.csv')
-    }).then((total) => {
-        console.log('Total: %d', total);
-        return schema.Sample.findOne();
-    }).then((s) => {
-        console.log(s.dataValues);
-        process.exit();
-    });
+Promise.all([
+    importSpeciesRecords(fs.createReadStream(DATA_PATH + 'taxa.csv'))
+        .then(total => { console.log('Total species: %d', total); }),
+    importSampleRecords(fs.createReadStream(DATA_PATH + 'samples.csv'))
+        .then(total => { console.log('Total samples: %d', total); })
+]).then(() => {
+    process.exit();
+}, e => {
+    console.error(e);
+    process.exit();
+});

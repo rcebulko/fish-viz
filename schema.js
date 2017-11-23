@@ -1,4 +1,5 @@
 var Sequelize = require('sequelize'),
+
     db = new Sequelize('fish_viz', 'admin', 'fishvizpass', {
         host: 'localhost',
         dialect: 'sqlite',
@@ -10,13 +11,6 @@ var Sequelize = require('sequelize'),
     }),
 
     REGIONS = Sequelize.ENUM('FLA KEYS', 'DRY TORT', 'SEFCRI'),
-
-    SampleSet = db.define('sample_set', {
-        year: { type: Sequelize.INTEGER, unique: 'sampling' },
-        region: { type: REGIONS, unique: 'sampling'},
-        dataFile: { type: Sequelize.STRING, field: 'data_file' },
-        count: { type: Sequelize.INTEGER, field: 'sample_count' },
-    }),
 
     Sample = db.define('sample', {
         species_code: { type: Sequelize.STRING },
@@ -48,10 +42,16 @@ var Sequelize = require('sequelize'),
 
 Species.hasMany(Sample, { foreignKey: 'species_code', sourceKey: 'code' });
 Sample.belongsTo(Species, { foreignKey: 'species_code', sourceKey: 'code' });
-SampleSet.hasMany(Sample);
 
-// SampleSet.sync({ force: true })
-// Species.sync({ force: true })
-// Sample.sync({ force: true })
 
 module.exports = { db, Sample, Species }
+
+// `node schema Sample` --> resets the `samples` table
+if (require.main == module) {
+    process.argv.slice(2).forEach(modelName => {
+        Model = module.exports[modelName];
+        if (typeof Model !== 'undefined') {
+            Model.sync({ force: true });
+        }
+    })
+}
