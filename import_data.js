@@ -4,7 +4,8 @@ var csv = require('fast-csv'),
 
     schema = require('./schema.js'),
 
-    DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
+    // DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
+    DATA_PATH = './data/',
 
     READ_LOG_INTERVAL = 10000,
     WRITE_BATCH_SIZE = 10000,

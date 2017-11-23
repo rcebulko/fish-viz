@@ -1,6 +1,7 @@
 var http = require('http'),
     sqlRouter = require('sequelize-router'),
 
+    cors = require('cors'),
     express = require('express'),
     app = express(),
 
@@ -27,6 +28,7 @@ function findAllLimit(Model) {
     }
 }
 
+app.use(cors())
 // establish API endpoints for each model
 app.use('/api', sqlRouter(schema.Species, {
     find: findAllLimit(schema.Species)

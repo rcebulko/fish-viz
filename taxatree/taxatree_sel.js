@@ -26,8 +26,8 @@ function draw_taxa(taxatree) {
       .append('option')
         .attr('value', d => d.data.id)
         .text(d => d.data.id)
-    .on('change', function(e) {
-      console.log('HERE');
+    .on('change', function(d) {
+      console.log(d);
     });
 }
 
@@ -76,6 +76,7 @@ function loss() {
 }
 
 function select_family_onchange() {
+  // console.log('HERE');
   // options = taxa_selectors.family.options
   // for(var i = 0; i < options.length; i++) {
   //   option = taxa_selectors.family.options[i];
@@ -86,7 +87,7 @@ function select_family_onchange() {
 }
 
 function select_genus_onchange() {
-  select_species_onchange();
+  // select_species_onchange();
 }
 
 function select_species_onchange() {

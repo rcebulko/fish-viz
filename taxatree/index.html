@@ -57,21 +57,18 @@
   }
 
   select.taxa {
-    height: 10cm;
+    height: 20cm;
   }
 </style>
 
 <div id='container'>
   <div class='content'>
-    <div id='taxatree_select'>
-      Family / genus / species: <br/>
-      <select multiple class='taxa family' 
-        onchange='select_family_onchange()'></select>
-      <select multiple class='taxa genus'
-        onchange='select_genus_onchange()'></select>
-      <select multiple class='taxa species'
-        onchange='select_species_onchange()'></select>
-    </div>
+    <!-- <div id='taxatree_select'> -->
+    <!--   Family / genus / species: <br/> -->
+    <!--   <select multiple class='taxa family'></select> -->
+    <!--   <select multiple class='taxa genus'></select> -->
+    <!--   <select multiple class='taxa species'></select> -->
+    <!-- </div> -->
     <svg id='taxatree' width='600' height='600'></svg>
   </div>
   <!-- <div class='content'> -->
@@ -82,16 +79,16 @@
   <!--   <div id='map'></div> -->
   <!-- </div> -->
 </div>
+
 <svg id='geo' width='800' height='600'></svg>
 
 <script src='//d3js.org/d3.v4.min.js'></script>
 
 <script src='data.js'></script>
-<!-- <script src='taxa.js'></script> -->
+<script src='taxa.js'></script>
 
 <!-- <script src='taxatree_sel.js'></script> -->
-<!-- <script src='taxatree.js'></script> -->
-<!-- <script src='taxatree.js'></script> -->
+<script src='taxatree.js'></script>
 <!-- <script src='taxatree2.js'></script> -->
-<script src='geo.js'></script>
-<script async defer src='https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&callback=initMap'></script>
+<!-- <script src='geo.js'></script> -->
+<!-- <script async defer src='https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&callback=initMap'></script> -->
