@@ -8,12 +8,12 @@ var express = require('express'),
 
     PORT = 90;
 
-app.use('/api', seqRouter(schema.Species, {
-    find: (req, res) => {
+function findAllLimit(Model) {
+    return (req, res) => {
         var limit = req.query.limit;
         delete req.query.limit;
 
-        schema.Species.findAll({
+        Model.findAll({
             where: req.query,
             limit: limit
         }).then(dbModel => {
@@ -22,8 +22,14 @@ app.use('/api', seqRouter(schema.Species, {
             res.json(err);
         });
     }
+}
+
+app.use('/api', seqRouter(schema.Species, {
+    find: findAllLimit(schema.Species)
 }));
-// app.use('/api', seqRouter(schema.Sample));
+app.use('/api', seqRouter(schema.Sample), {
+    find: findAllLimit(schema.Sample)
+});
 
 http.createServer(app).listen(PORT, function () {
     console.log('Express server listening on port ' + PORT);
