@@ -1,4 +1,8 @@
-var Sequelize = require('sequelize'),
+var Sequelize = require('sequelize')
+
+    argv = require('minimist')(process.argv.slice(2), {
+        boolean: ['log-sql', 'species', 'samples']
+    }),
 
     db = new Sequelize('fish_viz', 'admin', 'fishvizpass', {
         host: 'localhost',
@@ -7,7 +11,7 @@ var Sequelize = require('sequelize'),
         pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
 
         storage: 'sqlite.db',
-        logging: process.argv.indexOf('--log-sql') !== -1,
+        logging: argv['log-sql'],
     }),
 
     REGIONS = Sequelize.ENUM('FLA KEYS', 'DRY TORT', 'SEFCRI'),
@@ -46,10 +50,9 @@ Sample.belongsTo(Species, { foreignKey: 'species_code', sourceKey: 'code' });
 
 module.exports = { db, Sample, Species }
 
-// `node schema Sample` --> resets the `samples` table
-if (require.main == module) {
-    process.argv.slice(2).forEach(arg => {
-        if (arg === '--species') { Species.sync({ force: true }); }
-        if (arg === '--samples') { Sample.sync({ force: true }); }
-    })
+// `node schema --samples` --> creates/re-creates the `samples` table
+// `node schema --species` --> creates/re-creates the `samples` table
+if (require.main === module) {
+    if (argv['species']) { Species.sync({ force: true }); }
+    if (argv['samples']) { Sample.sync({ force: true }); }
 }
