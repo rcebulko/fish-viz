@@ -23,10 +23,8 @@ function importRecords(csvStream, Model, convert) {
             converted,
 
             insertAll = () => {
-                console.log(built[0]);
                 inserts.push(
                     Model.bulkCreate(built).then(results => {
-                        console.log(results[0].dataValues);
                         written += results.length;
                         console.log('Written (%s): %d', Model.name, written);
                     })
