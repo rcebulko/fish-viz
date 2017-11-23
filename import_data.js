@@ -1,6 +1,5 @@
 var csv = require('fast-csv'),
     fs = require('fs'),
-    request = require('request'),
     Transaction = require('sequelize').Transaction,
 
     schema = require('./schema.js'),
@@ -8,7 +7,11 @@ var csv = require('fast-csv'),
     DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
 
     READ_LOG_INTERVAL = 10000,
-    WRITE_BATCH_SIZE = 10000;
+    WRITE_BATCH_SIZE = 10000,
+
+    argv = require('minimist')(process.argv.slice(2), {
+        boolean: ['species', 'samples'],
+    });
 
 
 function importRecords(csvStream, Model, convert) {
@@ -59,7 +62,7 @@ function importRecords(csvStream, Model, convert) {
             reject(e);
         });
     }).then((count) => {
-        console.log('Added %d', count)
+        console.log('Added (%s): %d', Model.name, count)
         return Model.count();
     });
 }
@@ -77,7 +80,7 @@ function importSampleRecords(csvFile) {
 function speciesFromRecord(record) {
     if (record.SPECIES_CD) {
         return {
-            code: record.SPECIES_CD,
+            species_code: record.SPECIES_CD,
             species: record.SCINAME.split(' ')[1],
             genus: record.SCINAME.split(' ')[0],
             family: record.FAMILY,
@@ -123,25 +126,35 @@ function importSamples(filename) {
         });
 }
 
+
 // `node import_data --species` --> imports species data
 // `node import_data --sample` --> imports sample data
-if (require.main == module) {
+if (require.main === module) {
     var imports = [],
-        args = process.argv.slice(2);
+        args = process.argv.slice(2),
+        importComplete = () => {
+            if (!argv['port']) {
+                process.exit();
+            } else {
+                console.log('Import complete! Server will remain online.');
+            }
+        };
 
-    if (args.indexOf('--species') !== -1) {
-        imports.push(importSpecies('taxa.csv'));
-    }
-    if (args.indexOf('--samples') !== -1) {
-        imports.push(importSamples('samples.csv'));
+    if (argv['species']) { imports.push(importSpecies('taxa.csv')); }
+    if (argv['samples']) { imports.push(importSamples('samples.csv')); }
+
+    // optionally run API server while import is in progress
+    if (argv['port']) {
+        Promise.all([Species.sync(), Sample.sync()]).then(() => {
+            require('./api').start(+argv['port']);
+        });
     }
 
-    Promise.all(imports).then(() => {
-        process.exit();
-    }, e => {
+    Promise.all(imports).then(importComplete, e => {
         console.error(e);
-        process.exit();
+        importComplete()
     });
+
 }
 
-
+module.exports = { importSpecies, importSamples }
