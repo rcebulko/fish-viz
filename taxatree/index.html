@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<meta charset='utf-8'>
+<style>
+  circle {
+    stroke: #05668D;
+    fill: white;
+    opacity: 0.6;
+    stroke-width: 2px;
+  }
+
+  circle.taxa.infilter {
+    stroke: red;
+  }
+
+  circle.taxa.selected {
+    stroke:red;
+  }
+
+  .stations, .stations svg {
+    position: absolute;
+  }
+
+  .stations svg {
+    width: 60px;
+    height: 20px;
+    padding-right: 100px;
+    font: 10px sans-serif;
+  }
+
+  .stations circle {
+    fill: brown;
+    stroke: black;
+    stroke-width: 1.5px;
+  }
+
+  path {
+    fill: none;
+    stroke: #05668D;
+    opacity: 0.6;
+    stroke-width: 2px;
+  }
+
+  .taxa.tooltip {
+    position: absolute;
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 4px;
+  }
+
+  #map {
+    width: 600px;
+    height: 600px;
+  }
+
+  .content {
+    float: left;
+  }
+
+  select.taxa {
+    height: 10cm;
+  }
+</style>
+
+<div id='container'>
+  <div class='content'>
+    <div id='taxatree_select'>
+      Family / genus / species: <br/>
+      <select multiple class='taxa family' 
+        onchange='select_family_onchange()'></select>
+      <select multiple class='taxa genus'
+        onchange='select_genus_onchange()'></select>
+      <select multiple class='taxa species'
+        onchange='select_species_onchange()'></select>
+    </div>
+    <svg id='taxatree' width='600' height='600'></svg>
+  </div>
+  <!-- <div class='content'> -->
+  <!--   <div> -->
+  <!--     Region: <br/> -->
+  <!--     <select class='geo region' onchange='select_region_onchange()'></select> -->
+  <!--   </div> -->
+  <!--   <div id='map'></div> -->
+  <!-- </div> -->
+</div>
+<svg id='geo' width='800' height='600'></svg>
+
+<script src='//d3js.org/d3.v4.min.js'></script>
+
+<script src='data.js'></script>
+<!-- <script src='taxa.js'></script> -->
+
+<!-- <script src='taxatree_sel.js'></script> -->
+<!-- <script src='taxatree.js'></script> -->
+<!-- <script src='taxatree.js'></script> -->
+<!-- <script src='taxatree2.js'></script> -->
+<script src='geo.js'></script>
+<script async defer src='https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&callback=initMap'></script>
