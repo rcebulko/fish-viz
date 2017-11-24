@@ -10,6 +10,7 @@ var http = require('http'),
         default: { port: 90 }
     });
 
+
 // generate the modified find function for the sequel router to enable limiting
 function findAllLimit(Model) {
     return (req, res) => {
@@ -27,6 +28,14 @@ function findAllLimit(Model) {
     }
 }
 
+// start the server listening on port `port`
+function start(port) {
+    http.createServer(app).listen(port, function () {
+        console.log('Express server listening on port ' + port);
+    });
+};
+
+
 // establish API endpoints for each model
 app.use('/api', sqlRouter(schema.Species, {
     find: findAllLimit(schema.Species)
@@ -34,16 +43,12 @@ app.use('/api', sqlRouter(schema.Species, {
 app.use('/api', sqlRouter(schema.Sample, {
     find: findAllLimit(schema.Sample)
 }));
+// establish static assets path
 app.use(express.static('public'));
 
-// start the API listening on port `port`
-function start(port) {
-    http.createServer(app).listen(port, function () {
-        console.log('Express server listening on port ' + port);
-    });
-};
 
 if (require.main === module) {
     start(argv['port']);
 }
+
 module.exports = { start }
