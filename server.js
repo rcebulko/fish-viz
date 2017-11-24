@@ -11,23 +11,6 @@ var http = require('http'),
     });
 
 
-// generate the modified find function for the sequel router to enable limiting
-function findAllOpts(Model, opts) {
-    return (req, res) => {
-        var limit = req.query.limit;
-        delete req.query.limit;
-
-        Model.findAll(Object.assign({
-            where: req.query,
-            limit: limit
-        }, opts)).then(dbModel => {
-            res.json(dbModel);
-        }).catch(err => {
-            res.json(err);
-        });
-    }
-}
-
 // start the server listening on port `port`
 function start(port) {
     http.createServer(app).listen(port, function () {
@@ -37,11 +20,28 @@ function start(port) {
 
 
 // establish API endpoints for each model
-app.use('/api', sqlRouter(schema.Species, {
-    find: findAllOpts(schema.Species)
-}));
+app.use('/api', sqlRouter(schema.Species));
 app.use('/api', sqlRouter(schema.Sample, {
-    find: findAllOpts(schema.Sample, { include: [schema.Species] })
+    find: (req, res) => {
+        var limit = req.query.limit,
+            speciesWhere = req.query.species;
+
+        delete req.query.limit;
+        delete req.query.species;
+
+        schema.Sample.findAll({
+            where: req.query,
+            limit: limit,
+            include: [{
+                model: schema.Species,
+                where: speciesWhere
+            }]
+        }).then(dbModel => {
+            res.json(dbModel);
+        }).catch(err => {
+            res.json(err);
+        });
+    }
 }));
 // establish static assets path
 app.use(express.static('public'));
