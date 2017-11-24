@@ -1,94 +1,53 @@
 <!DOCTYPE html>
-<meta charset='utf-8'>
-<style>
-  circle {
-    stroke: #05668D;
-    fill: white;
-    opacity: 0.6;
-    stroke-width: 2px;
-  }
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="styles.css">
 
-  circle.taxa.infilter {
-    stroke: red;
-  }
+        <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="//d3js.org/d3.v4.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-request/1.0.6/d3-request.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-dispatch/1.0.3/d3-dispatch.min.js"></script>
 
-  circle.taxa.selected {
-    stroke:red;
-  }
+    </head>
 
-  .stations, .stations svg {
-    position: absolute;
-  }
+    <body>
+        <div id="container">
+            <div class="content">
+                <div id="taxatree_select">
+                  Family / genus / species: <br/>
+                  <select multiple class="taxa family"></select>
+                  <select multiple class="taxa genus"></select>
+                  <select multiple class="taxa species"></select>
+                </div>
 
-  .stations svg {
-    width: 60px;
-    height: 20px;
-    padding-right: 100px;
-    font: 10px sans-serif;
-  }
+                <svg id="taxatree" width="600" height="600"></svg>
+            </div>
 
-  .stations circle {
-    fill: brown;
-    stroke: black;
-    stroke-width: 1.5px;
-  }
+          <div class="content">
+            <div>
+                Region: <br>
+                <select class="geo region" onchange="select_region_onchange()"></select>
+            </div>
 
-  path {
-    fill: none;
-    stroke: #05668D;
-    opacity: 0.6;
-    stroke-width: 2px;
-  }
+            <div id="map"></div>
+          </div>
+        </div>
 
-  .taxa.tooltip {
-    position: absolute;
-    background-color: white;
-    border: 2px solid black;
-    border-radius: 4px;
-  }
+        <svg id="geo" width="800" height="600"></svg>
 
-  #map {
-    width: 600px;
-    height: 600px;
-  }
 
-  .content {
-    float: left;
-  }
 
-  select.taxa {
-    height: 20cm;
-  }
-</style>
+        <script src="data.js"></script>
+        <script src="taxa.js"></script>
 
-<div id='container'>
-  <div class='content'>
-    <!-- <div id='taxatree_select'> -->
-    <!--   Family / genus / species: <br/> -->
-    <!--   <select multiple class='taxa family'></select> -->
-    <!--   <select multiple class='taxa genus'></select> -->
-    <!--   <select multiple class='taxa species'></select> -->
-    <!-- </div> -->
-    <svg id='taxatree' width='600' height='600'></svg>
-  </div>
-  <!-- <div class='content'> -->
-  <!--   <div> -->
-  <!--     Region: <br/> -->
-  <!--     <select class='geo region' onchange='select_region_onchange()'></select> -->
-  <!--   </div> -->
-  <!--   <div id='map'></div> -->
-  <!-- </div> -->
-</div>
+        <!-- <script src="taxatree_sel.js"></script> -->
+        <script src="taxatree.js"></script>
+        <!-- <script src="taxatree2.js"></script> -->
+        <script src="geo.js"></script>
 
-<svg id='geo' width='800' height='600'></svg>
+        <script src="api.js"></script>
 
-<script src='//d3js.org/d3.v4.min.js'></script>
-
-<script src='data.js'></script>
-<script src='taxa.js'></script>
-
-<!-- <script src='taxatree_sel.js'></script> -->
-<script src='taxatree.js'></script>
-<!-- <script src='taxatree2.js'></script> -->
-<!-- <script src='geo.js'></script> -->
-<!-- <script async defer src='https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&callback=initMap'></script> -->
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&callback=initMap"></script>
+    </body>
+</html>
