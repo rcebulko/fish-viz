@@ -4,8 +4,8 @@ var csv = require('fast-csv'),
 
     schema = require('./schema.js'),
 
-    // DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
-    DATA_PATH = './data/',
+    DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
+    // DATA_PATH = './data/',
 
     READ_LOG_INTERVAL = 10000,
     WRITE_BATCH_SIZE = 10000,
@@ -16,33 +16,27 @@ var csv = require('fast-csv'),
 
 
 function importRecords(csvStream, Model, convert) {
-    var inserts = [];
-
     return new Promise((resolve, reject) => {
-        var count = 0,
-            read = 0,
+        var read = 0,
             written = 0,
-            built = [],
+            batch = [],
             inserts = [],
             converted,
 
             insertAll = () => {
                 inserts.push(
-                    Model.bulkCreate(built, {
+                    Model.bulkCreate(batch, {
                         ignoreDuplicates: true
                     }).then(results => {
                         written += results.length;
                         console.log('Written (%s): %d', Model.name, written);
-                    }, error => {
-                        console.log(error);
-                        process.exit();
                     })
                 );
 
-                built = [];
+                batch = [];
             };
 
-        csv.fromStream(csvStream, {  headers: true }).on('data', rec => {
+        csv.fromStream(csvStream, { headers: true }).on('data', rec => {
             converted = convert(rec);
 
             read++;
@@ -51,18 +45,15 @@ function importRecords(csvStream, Model, convert) {
             }
 
             if (converted) {
-                built.push(converted);
-                count++;
+                batch.push(converted);
 
-                if (count % WRITE_BATCH_SIZE === 0) {
+                if (batch.length % WRITE_BATCH_SIZE === 0) {
                     insertAll();
                 }
             }
         }).on('end', () => {
             insertAll()
             Promise.all(inserts).then(() => { resolve(written); });
-        }).on('data-invalid', badData => {
-            console.error('Invalid data:', badData);
         }).on('error', e => {
             console.error(e);
             reject(e);
@@ -79,7 +70,20 @@ function importSpeciesRecords(csvFile) {
 }
 
 function importSampleRecords(csvFile) {
-    return importRecords(csvFile, schema.Sample, sampleFromRecord);
+    return schema.Species.findAll({ attributes: ['code'] }).then(results => {
+        var codes = results.map(s => s.code),
+
+            // ensure we don't try to create samples for missing species
+            filteredSampleFromRecord = record => {
+                var sample = sampleFromRecord(record);
+
+                if (sample && codes.indexOf(sample.species_code) !== -1) {
+                    return sample
+                }
+            };
+
+        return importRecords(csvFile, schema.Sample, filteredSampleFromRecord);
+    });
 }
 
 

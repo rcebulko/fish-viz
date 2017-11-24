@@ -48,11 +48,11 @@ Species.hasMany(Sample, { foreignKey: 'species_code', sourceKey: 'code' });
 Sample.belongsTo(Species, { foreignKey: 'species_code', sourceKey: 'code' });
 
 
-module.exports = { db, Sample, Species }
-
 // `node schema --samples` --> creates/re-creates the `samples` table
 // `node schema --species` --> creates/re-creates the `samples` table
 if (require.main === module) {
     if (argv['species']) { Species.sync({ force: true }); }
     if (argv['samples']) { Sample.sync({ force: true }); }
 }
+
+module.exports = { db, Sample, Species }
