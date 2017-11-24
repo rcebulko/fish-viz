@@ -154,10 +154,10 @@ if (require.main === module) {
     if (argv['species']) { imports.push(importSpecies('taxa.csv')); }
     if (argv['samples']) { imports.push(importSamples('samples.csv')); }
 
-    // optionally run API server while import is in progress
+    // optionally run server while import is in progress
     if (argv['port']) {
         Promise.all([Species.sync(), Sample.sync()]).then(() => {
-            require('./api').start(+argv['port']);
+            require('./server').start(+argv['port']);
         });
     }
 

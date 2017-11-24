@@ -13,6 +13,6 @@ The flag `--log-sql` may be added to the invocation of any file to enabled loggi
     - `--sample`: imports sample data
     - `--port`: if provided, starts the server in the background on the given port
 
-## api.js
-`> node api [--port <port>]`
+## server.js
+`> node server [--port <port>]`
     - `--port`: starts the server on the given port (default 90)
