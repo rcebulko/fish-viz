@@ -110,9 +110,9 @@ function sampleFromRecord(record) {
             date: new Date(record.YEAR, record.MONTH, record.DAY),
             latitude: +record.LAT_DEGREES,
             longitude: +record.LON_DEGREES,
-            depth: +record.DEPTH,
-            length: +record.LEN,
-            number: +record.NUM,
+            depth: Math.abs(record.DEPTH),
+            length: Math.abs(record.LEN),
+            number: Math.abs(record.NUM),
             protected: !!record.PROT,
         }
     }
