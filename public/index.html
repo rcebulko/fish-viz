@@ -2,16 +2,16 @@
 <html>
     <head>
         <meta charset="utf-8">
+
+        <!-- App styles -->
         <link rel="stylesheet" href="styles.css">
-
-        <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-        <script src="//d3js.org/d3.v4.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-request/1.0.6/d3-request.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-dispatch/1.0.3/d3-dispatch.min.js"></script>
-
+        <!-- noUiSlider -->
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.css">
     </head>
 
     <body>
+        <div class="date-range"></div>
+
         <div id="container">
             <div class="content">
                 <div id="taxatree_select">
@@ -37,11 +37,22 @@
         <!-- <svg id="geo" width="800" height="600"></svg> -->
 
 
+        <!-- jQuery -->
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
+        <!-- Core classes -->
         <script src="api.js"></script>
         <script src="taxonomy.js"></script>
 
+        <!-- D3 + extensions -->
+        <script src="//d3js.org/d3.v4.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-request/1.0.6/d3-request.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-dispatch/1.0.3/d3-dispatch.min.js"></script>
 
+        <!-- noUiSlider -->
+        <script src="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.js"></script>
+        <!-- Date range slider -->
+        <script src="date-range.js"></script>
 <!--
         <script src="data.js"></script>
         <script src="taxa.js"></script>

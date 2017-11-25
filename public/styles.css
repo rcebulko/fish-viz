@@ -1,3 +1,8 @@
+.date-range {
+    height: 400px;
+    margin-left: 80px;
+}
+
 circle {
     stroke: #05668D;
     fill: white;
