@@ -15,6 +15,9 @@
     function setDateRange(dateMin, dateMax) {
         setBetweenFilter('data', dateMin, dateMax);
     }
+    function setRegion(region) {
+        currentFilters.region = region;
+    }
 
     // fetch taxonomy data
     function fetchSpeciesData(callback) {
