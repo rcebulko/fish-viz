@@ -1,5 +1,5 @@
 // Provides interface into Species/Sample API
-// must be loaded after `d3-request`
+// must be loaded after `jQuery`
 (function (exports) {
     var API_PATH = 'http://localhost:1337/api/',
         currentFilters = {};
@@ -47,6 +47,7 @@
         setRegion,
         setGeoBounds,
         setDateRange,
+        setRegion,
 
         fetchSpeciesData,
         fetchSampleData,
