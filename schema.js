@@ -1,5 +1,4 @@
 var Sequelize = require('sequelize'),
-    Op = Sequelize.Op,
 
     argv = require('minimist')(process.argv.slice(2), {
         boolean: ['log-sql', 'species', 'samples']
@@ -34,9 +33,12 @@ var Sequelize = require('sequelize'),
         }],
 
         defaultScope: {
-            date: { [Op.between]: [new Date(1999, 4), new Date(2018)] },
-            latitude: { [Op.between]: [24.4313, 27.18972] },
-            longitude: { [Op.between]: [-83.103667, -79.9938] },
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
+            where: {
+                date: { $between: [new Date(1999, 4), new Date(2018, 0)] },
+                latitude: { $between: [24.4313, 27.18972] },
+                longitude: { $between: [-83.103667, -79.9938] },
+            }
         }
     }),
 
@@ -47,6 +49,15 @@ var Sequelize = require('sequelize'),
         family: { type: Sequelize.STRING },
         scientificName: { type: Sequelize.STRING, field: 'sci_name' },
         commonName: { type: Sequelize.STRING, field: 'common_name' },
+    }, {
+        defaultScope: {
+            attributes: { exclude: ['createdAt', 'updatedAt'] },
+            where: {
+                family: { $not: '' },
+                genus: { $not: 'Unknown' },
+                species: { $not: 'sp.' },
+            }
+        }
     });
 
 Species.hasMany(Sample, { foreignKey: 'species_code', sourceKey: 'code' });

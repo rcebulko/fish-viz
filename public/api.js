@@ -1,3 +1,5 @@
+// Provides interface into Species/Sample API
+// must be loaded after `d3-request`
 (function (exports) {
     var API_PATH = 'http://localhost:90/api/',
         currentFilters = {};
@@ -16,15 +18,15 @@
 
     // fetch taxonomy data
     function fetchSpeciesData(callback) {
-        d3.json(API_PATH + '/species', callback);
+        $.get(API_PATH + 'species', callback);
     }
 
     // fetch samples with arbitrary filters
     function fetchSampleData(filterOpts, callback) {
-        d3.request(API_PATH + '/sample')
-            .post(Object.assign({}, currentFilters, filterOpts}, xhr => {
-                callback(JSON.parse(xhr.response));
-            });
+        $.get(API_PATH + 'sample',
+            Object.assign({}, currentFilters, filterOpts),
+            callback
+        );
     }
 
     // common use case queries
