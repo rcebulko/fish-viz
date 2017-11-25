@@ -1,0 +1,10 @@
+#!/usr/bin/zsh
+
+samplefile=$1
+
+./regions $samplefile | while read region; do 
+  echo $region
+  grep $region $samplefile | cut -d, -f5,7 | sed 's/,/ /g' | awk 'BEGIN{latmi=1000;latma=-1000;lngmi=1000;lngma=-1000};$1<latmi{latmi=$1};$1>latma{latma=$1};$2<lngmi{lngmi=$2};$2>lngma{lngma=$2};END{print("min:",latmi,lngmi);print("max:",latma,lngma)}'
+done
+
+exit 0

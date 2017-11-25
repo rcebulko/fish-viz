@@ -1,0 +1,6 @@
+#!/usr/bin/zsh
+
+samplefile=$1
+cat $samplefile | tail -n +2 | cut -d, -f14 | sort | uniq | sed '/^[[:space:]]*$/d'
+
+exit 0

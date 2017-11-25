@@ -1,0 +1,8 @@
+#!/usr/bin/zsh
+
+samplefile=$1
+
+cat $samplefile | head -n 1  | cut -d, -f2- > samples.clean.csv
+cat $samplefile | tail -n +2 | cut -d, -f2- | sort | uniq >> samples.clean.csv
+
+exit 0

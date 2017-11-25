@@ -1,0 +1,58 @@
+circle {
+    stroke: #05668D;
+    fill: white;
+    opacity: 0.6;
+    stroke-width: 2px;
+}
+
+circle.taxa.infilter {
+    stroke: red;
+}
+
+circle.taxa.selected {
+    stroke:red;
+}
+
+.stations, .stations svg {
+    position: absolute;
+}
+
+.stations svg {
+    width: 60px;
+    height: 20px;
+    padding-right: 100px;
+    font: 10px sans-serif;
+}
+
+.stations circle {
+    fill: red;
+    stroke: black;
+    stroke-width: 1.5px;
+}
+
+path {
+    fill: none;
+    stroke: #05668D;
+    opacity: 0.6;
+    stroke-width: 2px;
+}
+
+.taxa.tooltip {
+    position: absolute;
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 4px;
+}
+
+#map {
+    width: 600px;
+    height: 600px;
+}
+
+.content {
+    float: left;
+}
+
+select.taxa {
+    height: 20cm;
+}
