@@ -7,7 +7,7 @@ var http = require('http'),
     schema = require('./schema'),
 
     argv = require('minimist')(process.argv.slice(2), {
-        default: { port: 90 }
+        default: { port: 1337 }
     });
 
 

@@ -1,7 +1,7 @@
 // Provides interface into Species/Sample API
 // must be loaded after `d3-request`
 (function (exports) {
-    var API_PATH = 'http://localhost:90/api/',
+    var API_PATH = 'http://localhost:1337/api/',
         currentFilters = {};
 
     // filter settings

@@ -18,4 +18,4 @@ The flag `--log-sql` may be added to the invocation of any file to enabled loggi
 
 ## server.js
 `> node server [--port <port>]`
-    - `--port`: starts the server on the given port (default 90)
+    - `--port`: starts the server on the given port (default 1337)
