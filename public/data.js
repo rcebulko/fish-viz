@@ -8,9 +8,9 @@ var dispatch = d3.dispatch(
   'samples_loaded',
 );
 
-API.fetchSpeciesData(data => {
-  dispatch.call('taxa_loaded', null, data);
-});
+// API.fetchSpeciesData(data => {
+//   dispatch.call('taxa_loaded', null, data);
+// });
 
 // TODO really I should not be reading the whole data right now..  but should
 // be reading the data according to the filter..

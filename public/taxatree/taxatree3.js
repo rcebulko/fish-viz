@@ -3,22 +3,28 @@ var radius = 10;
 var taxa_radius = Math.min(width, height)/2 - radius;
 
 var arc, x, y, color;
-var paths;
+var rects;
 
 function draw_taxatree() {
-    x = d3.scaleLinear().range([0, 2 * Math.PI]);
-    // y = d3.scaleLinear().range([0, taxa_radius]);
-    y = d3.scalePow().exponent(1.5).range([0, taxa_radius]);
+    // x = d3.scaleLinear().range([0, 2 * Math.PI]);
+    // // y = d3.scaleLinear().range([0, taxa_radius]);
+    // y = d3.scalePow().exponent(1.5).range([0, taxa_radius]);
+
+    x = d3.scaleLinear().range([0, 100]);
+    y = d3.scalePow().exponent(1.5).range([0, 100]);
     color = d3.scaleOrdinal(d3.schemeCategory20);
 
     // var partition = d3.partition();
 
-    arc = d3.arc()
-        .startAngle(d => Math.max(0, Math.min(2 * Math.PI, x(d.x0))))
-        .endAngle(d => Math.max(0, Math.min(2 * Math.PI, x(d.x1))))
-        .innerRadius(d => Math.max(0, y(d.y0)))
-        // .outerRadius(d => Math.max(0, y(d.y1)));
-        .outerRadius(d => y(1));
+    // arc = d3.arc()
+    //     .startAngle(d => Math.max(0, Math.min(2 * Math.PI, x(d.x0))))
+    //     .endAngle(d => Math.max(0, Math.min(2 * Math.PI, x(d.x1))))
+    //     .innerRadius(d => Math.max(0, y(d.y0)))
+    //     // .outerRadius(d => Math.max(0, y(d.y1)));
+    //     .outerRadius(d => y(1));
+
+
+
 
     // taxatree = d3.hierarchy(taxatree);
     // // This makes all leaves of the same size
@@ -31,9 +37,6 @@ function draw_taxatree() {
     //   if (d.parent)
     //     d.y1 = 1;
     // });
-
-    // paths = g_taxa
-    //     .selectAll('path');
 
     draw_tree();
 
@@ -64,7 +67,7 @@ function draw_taxatree() {
 
 dispatch.on('taxa_mouseover.taxatree', function(d) {
     taxa_tooltip
-        .html(d.data.id)
+        .html(d.data.id())
         .style('left', d3.event.pageX + 'px')
         .style('top', (d3.event.pageY-28) + 'px')
         .transition()
@@ -80,9 +83,7 @@ dispatch.on('taxa_mouseout.taxatree', function() {
 });
 
 dispatch.on('taxa_click.taxatree', function(d) {
-    select_node(d, false);
-    // select_node(d, true);
-
+    d.data.select(!d.data.isSelected());
     draw_tree();
 
   // g_taxa
@@ -101,57 +102,51 @@ dispatch.on('taxa_click.taxatree', function(d) {
   //     .attrTween('d', d => () => arc(d));
 });
 
-function select_node(d, propagate) {
-    value = !d.data.selected;
-    d.data.selected = value;
-
-    if (propagate) {
-        // updates descendant values
-        d.descendants().forEach(function(d) {
-            d.data.selected = value;
-        });
-
-        // updates ancestor values
-        d.ancestors().forEach(function(d) {
-            if (d.children && d.children.every(d => d.data.selected == value))
-                d.data.selected = value;
-        });
-    }
-}
-
 function draw_tree() {
-    taxatree_ = d3.hierarchy(taxatree, function (d) {
-        if (d.children) {
-            children = d.children.filter(d => d.selected);
-                if (children.length)
-                    return children;
-            }
+
+    taxatree_ = d3.hierarchy(Taxonomy.root, function (d) {
+        var children = d.children();
+        if (children) {
+            children = children.filter(child => child.isSelected());
+            if (children.length)
+                return children;
+        }
     });
 
     taxatree_.count()
     // taxatree_.sort((a,b) => b.height - a.height || b.value - a.value);
     // taxatree_.sort((a,b) => b.height - a.height || a.data.id.localeCompare(b.data.id));
     // taxatree_.sort((a,b) => a.height - b.height || a.data.id.localeCompare(b.data.id));
-    taxatree_.sort((a,b) => a.data.id.localeCompare(b.data.id));
+    taxatree_.sort((a,b) => a.data.id().localeCompare(b.data.id()));
 
     var nodes = d3.partition()(taxatree_).descendants();
 
-    // forEach(function(d) {
-    //   console.log(d);
-    // });
-    // var selected_nodes = nodes.filter(d => d.data.selected);
+    rects = g_taxa.selectAll('rect')
+            .data(nodes, d => d.data.id());
 
-    // TODO compute new partition here..... absolutely must happen
-
-    paths = g_taxa.selectAll('path')
-            .data(nodes, d => d.data.uniq);
-
-    paths
+    rects
         .exit().remove();
 
-    paths
-        .enter().append('path')
-            // .style('fill', d => color(d.data.id))
+    // paths
+    //     .enter().append('path')
+    //         .style('fill', d => color(d.data.id()))
+    //         .on('mouseover', function(d) {
+    //             dispatch.call('taxa_mouseover', null, d);
+    //         })
+    //         .on('mouseout', function(d) {
+    //             dispatch.call('taxa_mouseout', null, d);
+    //         })
+    //         .on('click', function(d) {
+    //             dispatch.call('taxa_click', null, d);
+    //         })
+    //     .merge(paths)
+    //         .transition()
+    //             .duration(400)
+    //             .attr('d', arc);
+
+    rects
+        .enter().append('rect')
+            .style('fill', d => color(d.data.id()))
             .on('mouseover', function(d) {
                 dispatch.call('taxa_mouseover', null, d);
             })
@@ -161,32 +156,14 @@ function draw_tree() {
             .on('click', function(d) {
                 dispatch.call('taxa_click', null, d);
             })
-        .merge(paths)
+        .merge(rects)
             .transition()
-                .duration(500)
-                .attr('d', arc)
-                .style('fill', d => color(d.data.id))
-            // .style('fill', d => color((d.children? d: d.parent).data.id));
-            // .each(function(d) {
-            //     console.log(d);
-            // });
-
-    // g_taxa.selectAll('path')
-    //   // .data(partition(vData).descendants())
-    //   .data(selected_nodes)
-    //   .exit()
-    //     .remove()
-    //   .enter()
-    //     .append('path')
-    //     .attr('d', arc)
-    //     .style('fill', d => color((d.children? d: d.parent).data.id))
-    //     .on('mouseover', function(d) {
-    //       dispatch.call('taxa_mouseover', null, d);
-    //     })
-    //     .on('mouseout', function(d) {
-    //       dispatch.call('taxa_mouseout', null, d);
-    //     })
-    //     .on('click', function(d) {
-    //       dispatch.call('taxa_click', null, d);
-    //     });
+                .duration(400)
+                .attr('x', d => x(d.x0) + '%')
+                .attr('y', d => y(d.y0) + '%')
+                // .attr('width', d => x(d.x1) - x(d.x0))
+                // .attr('height', d => y(d.y1) - y(d.y0))
+                .attr('width', d => (x(d.x1) - x(d.x0)) + '%')
+                .attr('height', d => (y(1) - y(d.y0)) + '%')
+                
 }

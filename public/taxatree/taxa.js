@@ -3,8 +3,8 @@ var svg_taxa = d3.select('svg#taxatree'),
     height = +svg_taxa.attr('height');
 
 // Prepare our physical space
-var g_taxa = svg_taxa.append('g')
-          .attr('transform', 'translate(' + width/2 + ',' + height/2 + ')');
+var g_taxa = svg_taxa.append('g');
+          // .attr('transform', 'translate(' + width/2 + ',' + height/2 + ')');
 
 // Adding taxa tooltip
 var taxa_tooltip = d3 .select('body')
@@ -20,16 +20,20 @@ var taxa_select = {
 
 var taxatree;
 
-API.fetchSpeciesData(function(data) {
-    // patching data - TODO do this at DB level
-    data.forEach(function (d) {
-        if (!d.family)
-            d.family = 'NA';
-    });
+Taxonomy.init(function(root) {
+    draw_taxatree();
+});
 
-    data = data.filter(function (d) {
-        return d.family != 'NA' && d.genus != 'UNK' && d.species != 'SPE.';
-    });
+function old_init(data) {
+    // // patching data - TODO do this at DB level
+    // data.forEach(function (d) {
+    //     if (!d.family)
+    //         d.family = 'NA';
+    // });
+
+    // data = data.filter(function (d) {
+    //     return d.family != 'NA' && d.genus != 'UNK' && d.species != 'SPE.';
+    // });
 
     // creating hierarchical taxa tree
     taxatree = {
@@ -84,4 +88,5 @@ API.fetchSpeciesData(function(data) {
     });
 
     draw_taxatree();
-});
+}
+// });
