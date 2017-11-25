@@ -34,6 +34,7 @@ var Sequelize = require('sequelize'),
 
         defaultScope: {
             attributes: { exclude: ['createdAt', 'updatedAt'] },
+            limit: 10000,
             where: {
                 date: { $between: [new Date(1999, 4), new Date(2018, 0)] },
                 latitude: { $between: [24.4313, 27.18972] },
