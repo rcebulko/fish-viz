@@ -13,7 +13,7 @@
         setBetweenFilter('longitude', lonMin, lonMax);
     }
     function setDateRange(dateMin, dateMax) {
-        setBetweenFilter('data', dateMin, dateMax);
+        setBetweenFilter('date', dateMin, dateMax);
     }
     function setRegion(region) {
         currentFilters.region = region;
