@@ -1,3 +1,4 @@
+// must be loaded after `api.js`
 var region_bounds = {
   'DRY TORT': {
     latmi: +24.5420,
@@ -123,8 +124,7 @@ function initMap() {
   //   }
   // });
 
-  d3.csv('subsamples.csv', function(error, data) {
-    if (error) throw error;
+  API.fetchSampleData({ limit: 100 }, data => {
     dispatch.call('samples_loaded', null, data);
   });
 }

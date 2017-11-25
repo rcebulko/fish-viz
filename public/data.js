@@ -1,3 +1,5 @@
+// must be loaded after `d3-dispatch`
+// must be loaded after `api.js`
 var dispatch = d3.dispatch(
   'taxa_loaded',
   'taxa_mouseover',
@@ -6,8 +8,7 @@ var dispatch = d3.dispatch(
   'samples_loaded',
 );
 
-d3.json('http://localhost:7154/api/species', function(error, data) {
-  if (error) throw error;
+API.fetchSpeciesData(data => {
   dispatch.call('taxa_loaded', null, data);
 });
 
@@ -15,7 +16,6 @@ d3.json('http://localhost:7154/api/species', function(error, data) {
 // be reading the data according to the filter..
 
 // moved into geo.js
-d3.csv('subsamples.csv', function(error, data) {
-  if (error) throw error;
+API.fetchSampleData({ limit: 100 }, data => {
   dispatch.call('samples_loaded', null, data);
 });
