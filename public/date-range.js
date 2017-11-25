@@ -14,7 +14,7 @@
 
     function onChange(callback) {
         slider.noUiSlider.on('update', values => {
-            cb(values[0], values[1]);
+            callback(new Date(+values[0]), new Date(+values[1]));
         });
     }
 
