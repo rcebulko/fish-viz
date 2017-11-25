@@ -44,6 +44,7 @@
     }
 
     exports.API = {
+        setRegion,
         setGeoBounds,
         setDateRange,
 
