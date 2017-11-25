@@ -23,7 +23,6 @@
             this._familyName     = properties.family;
             this._scientificName = properties.scientificName;
             this._commonName     = properties.commonName;
-            this._selected       = false;
 
             this.init();
         }
@@ -34,6 +33,7 @@
 
     // Instance methods
     Species.prototype.init = function () {
+        this._selected = true;
         this.instances[this.id()] = this;
         this.parent().addChild(this);
     };
@@ -88,12 +88,12 @@
     Genus.prototype.toString = function () { return this.id(); };
     Genus.prototype.id = function () { return this._genusName; };
     Genus.prototype.parent = function () { return this.family(); };
-    Genus.prototype.isSelected = function () {
-        return this.children().every(c => c.isSelected());
-    };
     Genus.prototype.select = function (state) {
+        if (typeof state === undefined) { state = true; }
+        this._selected = state;
         this.children().forEach(c => c.select(state));
     };
+    // `isSelected` can inherit from the Species method
     // `deselect` can inherit from the Species method
     Genus.prototype.children = function () {
         return Object.values(this._children);
