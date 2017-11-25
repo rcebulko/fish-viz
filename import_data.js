@@ -1,8 +1,11 @@
 var csv = require('fast-csv'),
     fs = require('fs'),
-    Transaction = require('sequelize').Transaction,
+    Sequelize = require('sequelize')
+    Transaction = Sequelize.Transaction,
 
     schema = require('./schema.js'),
+    Sample = schema.Sample,
+    Species = schema.Species,
 
     DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
     // DATA_PATH = './data/',
@@ -66,11 +69,11 @@ function importRecords(csvStream, Model, convert) {
 
 
 function importSpeciesRecords(csvFile) {
-    return importRecords(csvFile, schema.Species, speciesFromRecord);
+    return importRecords(csvFile, Species, speciesFromRecord);
 }
 
 function importSampleRecords(csvFile) {
-    return schema.Species.findAll({ attributes: ['code'] }).then(results => {
+    return Species.findAll({ attributes: ['code'] }).then(results => {
         var codes = results.map(s => s.code),
 
             // ensure we don't try to create samples for missing species
@@ -82,7 +85,7 @@ function importSampleRecords(csvFile) {
                 }
             };
 
-        return importRecords(csvFile, schema.Sample, filteredSampleFromRecord);
+        return importRecords(csvFile, Sample, filteredSampleFromRecord);
     });
 }
 
@@ -114,13 +117,14 @@ function sampleFromRecord(record) {
             length: Math.abs(record.LEN),
             number: Math.abs(record.NUM),
             protected: !!record.PROT,
+            aggregated: false
         }
     }
 }
 
 
 function importSpecies(filename) {
-    return schema.Species.sync({ force: true })
+    return Species.sync({ force: true })
         .then(() => {
             return importSpeciesRecords(fs.createReadStream(DATA_PATH + filename));
         }).then(total => {
@@ -129,7 +133,7 @@ function importSpecies(filename) {
 }
 
 function importSamples(filename) {
-    return schema.Sample.sync({ force: true })
+    return Sample.sync({ force: true })
         .then(() => {
             return importSampleRecords(fs.createReadStream(DATA_PATH + filename));
         }).then(total => {
@@ -138,30 +142,125 @@ function importSamples(filename) {
 }
 
 
+// merge samples, using the weighted average of their length and depth
+function aggregateSamples() {
+    return Sample.destroy({
+        where: { aggregated: true }
+    }).then(() => {
+        // mark one-offs as aggregated
+        return Sample.findAll({
+            where: { aggregated: false },
+            attributes: ['id'],
+            group: ['region', 'date', 'latitude', 'longitude', 'species_code'],
+            having: Sequelize.where(
+                Sequelize.fn('COUNT', Sequelize.literal('1')), 1)
+        });
+    }).then(results => {
+        return Sample.update({ aggregated: true}, {
+            where: { id: results.map(s => { return s.dataValues.id; }) }
+        }).then(count => { console.log('Aggregated %d non-dupes', count)});
+    }).then(() => {
+        // create aggregates for dupes
+        return Sample.findAll({
+            where: { aggregated: false },
+            attributes: [
+                'region', 'date', 'latitude', 'longitude', 'species_code', 'protected',
+                [Sequelize.fn('COUNT', Sequelize.literal('1')), 'count'],
+                [Sequelize.fn('SUM', Sequelize.col('number')), 'total'],
+                [Sequelize.fn('SUM', Sequelize.literal('number*length')), 'lenWeight'],
+                [Sequelize.fn('SUM', Sequelize.literal('number*depth')), 'depWeight'],
+            ],
+            group: ['region', 'date', 'latitude', 'longitude', 'species_code'],
+            having: Sequelize.where(
+                Sequelize.fn('COUNT', Sequelize.literal('1')),
+                { $gt: 1 }
+            )
+        });
+    }).then(results => {
+        var dupeCount = 0,
+            aggregates = results.map(sample => {
+                sample = sample.dataValues;
+                dupeCount += sample.count;
+
+                return {
+                    species_code: sample.species_code,
+                    region: sample.region,
+                    date: sample.date,
+                    latitude: sample.latitude,
+                    longitude: sample.longitude,
+                    depth: sample.depWeight / sample.total,
+                    length: sample.lenWeight / sample.total,
+                    number: sample.total,
+                    protected: sample.protected,
+                    aggregated: true,
+                }
+            });
+
+        console.log('Total dupe count: %d', dupeCount);
+
+        function insertNextChunk() {
+            console.log('%d aggregations remaining', aggregates.length);
+
+            if (aggregates.length) {
+                return Sample.bulkCreate(aggregates.splice(-10000))
+                    .then(rs => {
+                        console.log('Created %d aggregated samples', rs.length);
+                    })
+                    .then(insertNextChunk);
+            }
+        }
+
+        return insertNextChunk();
+    });
+}
+// prune samples that have been merged
+function pruneAggregated() {
+    return Sample.destroy({
+        where: { aggregated: false },
+    }).then(count => {
+        console.log('Pruned %d pre-aggregation samples', count);
+    });
+}
+
+
 // `node import_data --species` --> imports species data
 // `node import_data --sample` --> imports sample data
 if (require.main === module) {
-    var imports = [],
+    var chain = Promise.all([]),
         args = process.argv.slice(2),
+        agg = false,
         importComplete = () => {
             if (!argv['port']) {
                 process.exit();
             } else {
-                console.log('Import complete! Server will remain online.');
+                console.log('Server will remain online.');
             }
         };
 
-    if (argv['species']) { imports.push(importSpecies('taxa.csv')); }
-    if (argv['samples']) { imports.push(importSamples('samples.csv')); }
+    if (argv['species']) {
+        chain = chain.then(() => { return importSpecies('taxa.csv'); });
+    }
+    if (argv['samples']) {
+        chain = chain.then(() => { return importSamples('samples.csv'); });
+    }
 
     // optionally run server while import is in progress
     if (argv['port']) {
-        Promise.all([Species.sync(), Sample.sync()]).then(() => {
+        Promise.all([
+            Species.sync(),
+            Sample.sync()
+        ]).then(() => {
             require('./server').start(+argv['port']);
         });
     }
 
-    Promise.all(imports).then(importComplete, e => {
+    chain.then(() => {
+        console.log('Import completed!');
+        if (argv['aggregate']) {
+            console.log('Aggregating samples...');
+            return aggregateSamples().then(pruneAggregated);
+        }
+    }).then(importComplete, e => {
         console.error(e);
         importComplete()
     });

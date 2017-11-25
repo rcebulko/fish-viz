@@ -30,8 +30,7 @@ var Sequelize = require('sequelize'),
         aggregated: { type: Sequelize.BOOLEAN }
     }, {
         indexes: [{
-            unique: true,
-            fields: ['region', 'date', 'latitude', 'longitude', 'species_code', 'length']
+            fields: ['region', 'date', 'latitude', 'longitude', 'species_code'],
         }],
 
         defaultScope: {
@@ -53,64 +52,6 @@ var Sequelize = require('sequelize'),
 Species.hasMany(Sample, { foreignKey: 'species_code', sourceKey: 'code' });
 Sample.belongsTo(Species, { foreignKey: 'species_code', sourceKey: 'code' });
 
-function aggregateSamples() {
-    Sample.findAll({
-        where: { aggregated: null },
-        attributes: [
-            'region', 'date', 'latitude', 'longitude', 'species_code', 'protected',
-            'length', 'depth',
-            [Sequelize.fn('SUM', Sequelize.col('number')), 'total'],
-            [Sequelize.fn('SUM', Sequelize.literal('number*length')), 'lenWeight'],
-            [Sequelize.fn('SUM', Sequelize.literal('number*depth')), 'depWeight'],
-        ],
-        group: ['region', 'date', 'latitude', 'longitude', 'species_code'],
-        having: Sequelize.where(
-            Sequelize.fn('COUNT', Sequelize.literal('1')),
-            { $gt: 1 }
-        )
-    }).then(results => {
-        aggregates = results.map(sample => {
-            sample = sample.dataValues;
-            return {
-                species_code: sample.species_code,
-                region: sample.region,
-                date: sample.date,
-                latitude: sample.latitude,
-                longitude: sample.longitude,
-                depth: sample.depWeight / sample.total,
-                length: -sample.lenWeight / sample.total,
-                number: sample.total,
-                protected: sample.protected,
-                aggregated: true,
-            }
-        });
-
-        function insertNextChunk() {
-            return new Promise((resolve, reject) => {
-                if (aggregates.length) {
-                    console.log('%d aggregations remaining', aggregates.length);
-                    return Sample.bulkCreate(aggregates.splice(-10000))
-                        .then(insertNextChunk);
-                } else {
-                    resolve();
-                }
-            });
-        }
-
-        insertNextChunk();
-    });
-}
-
-function pruneAggregated() {
-    Sample.destroy({
-        where: { aggregated: null },
-        group: ['region', 'date', 'latitude', 'longitude', 'species_code'],
-        having: Sequelize.where(
-            Sequelize.fn('COUNT', Sequelize.literal('1')),
-            { $gt: 1 }
-        )
-    });
-}
 
 // `node schema --samples` --> creates/re-creates the `samples` table
 // `node schema --species` --> creates/re-creates the `samples` table
