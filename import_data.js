@@ -7,8 +7,8 @@ var csv = require('fast-csv'),
     Sample = schema.Sample,
     Species = schema.Species,
 
-    DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
-    // DATA_PATH = './data/',
+    // DATA_PATH = 'C:/Users/Ryan/Downloads/fish_data/',
+    DATA_PATH = './data/',
 
     READ_LOG_INTERVAL = 10000,
     WRITE_BATCH_SIZE = 10000,

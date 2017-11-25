@@ -1,0 +1,9 @@
+#!/usr/bin/zsh
+
+samplefile=$1
+cat $samplefile | tail -n +2 | cut -d, -f2- | wc
+cat $samplefile | tail -n +2 | cut -d, -f2- | sort | uniq | wc
+
+cat $samplefile | tail -n +2 | cut -d, -f2- | sort | uniq -d
+
+exit 0
