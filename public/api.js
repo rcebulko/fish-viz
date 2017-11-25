@@ -1,3 +1,5 @@
+// Provides interface into Species/Sample API
+// must be loaded after `d3-request`
 (function (exports) {
     var API_PATH = 'http://localhost:90/api/',
         currentFilters = {};
@@ -22,7 +24,7 @@
     // fetch samples with arbitrary filters
     function fetchSampleData(filterOpts, callback) {
         d3.request(API_PATH + '/sample')
-            .post(Object.assign({}, currentFilters, filterOpts}, xhr => {
+            .get(Object.assign({}, currentFilters, filterOpts), xhr => {
                 callback(JSON.parse(xhr.response));
             });
     }
