@@ -3,7 +3,27 @@ var dispatch = d3.dispatch(
     'taxa_mouseover',
     'taxa_mouseout',
     'taxa_click',
+
     'samples_loaded',
+
+    'filter_loaded',
+    'filter_plot',
+    'plot_mouseover',
+    'plot_mouseout',
+
+    'rectangle_mouseover',
+    'rectangle_mouseout',
+
+    'selection_focus',
+    'selection_unfocus',
+
+    'filter_changed',
+    'filter_data',
+    'filter_datum_focus',
+    'filter_datum_unfocus',
+
+    'geo_datum_focus',
+    'geo_datum_unfocus',
 );
 
 // TODO really I should not be reading the whole data right now..  but should

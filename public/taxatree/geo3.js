@@ -17,12 +17,13 @@ var region_bounds = {
         latma: +27.1897,
         lngma: -79.9938,
     },
-}
+};
 
 var map, bounds;
 var region_select, region_rectangles;
-var overlay, layer, projection;
+var overlay, layer, svg, projection;
 var padding = 10;
+var markers = [];
 
 function initMap() {
     map = new google.maps.Map(d3.select('#map').node(), {
@@ -65,7 +66,9 @@ function initMap() {
         region_select.add(option);
     });
 
-    select_region_onchange();
+    var region = region_select.value;
+    bounds = region_bounds[region];
+    map.fitBounds(bounds);
 
     // TODO screen always within bounds
     var boundlimits = {
@@ -127,66 +130,112 @@ function initMap() {
 
     overlay = new google.maps.OverlayView();
     overlay.onAdd = function() {
-        layer = d3.select(this.getPanes().overlayLayer)
-            .append('div')
-            .attr('class', 'stations');
+        layer = d3.select(this.getPanes().overlayLayer);
+
+        // svg = layer.append('svg')
+        //     .attr('class', 'stations')
+        //     .attr('width', 100)
+        //     .attr('height', 100)
+        //     .style('background-color', 'black');
 
         overlay.draw = function() {
             projection = this.getProjection();
-            layer
-                .selectAll('svg')
-                .each(transform_sample);
+
+            // svg.call(transform_svg);
+
+            // layer
+            //     .selectAll('circle')
+            //     .each(transform_sample);
+
+            draw();
         };
+
+//         select_region_onchange();
     };
     overlay.setMap(map);
 }
 
 function select_region_onchange() {
-    // region = region_select.value;
-    // bounds = region_bounds[region];
-    // map.fitBounds(bounds);
-
-    // query = 'http://localhost:1337/api/sample?'
-    // query += '&species_code=ACA BAHI'
-    // query += '&region=' + region
-    // query += '&limit=10'
-    // d3.json(query, function(error, data) {
-    //     if (error) throw error;
-    //     dispatch.call('samples_loaded', null, data);
-    // });
     var region = region_select.value;
+
+    API.setRegion(region);
+
     bounds = region_bounds[region];
     map.fitBounds(bounds);
 
-    API.setRegion(region);
+    draw();
+}
+
+function draw() {
+    // TODO development only
+    // API.setDateRange('2015-01-01', '2017-01-01');
+
+    var bounds = map.getBounds();
+    API.setGeoBounds(
+        bounds.getSouthWest().lat(),
+        bounds.getNorthEast().lat(),
+        bounds.getSouthWest().lng(),
+        bounds.getNorthEast().lng(),
+    );
+
     API.fetchSpeciesSamples('ACA BAHI', function(data) {
+        console.log('Number of samples: %d', data.length);
         dispatch.call('samples_loaded', null, data);
     });
 }
 
-function transform_sample(d) {
-    d = new google.maps.LatLng(+d.latitude, +d.longitude);
-    d = projection.fromLatLngToDivPixel(d);
-    return d3.select(this)
-              .style('left', (d.x - padding) + 'px')
-              .style('top', (d.y - padding) + 'px');
-}
+// function transform_svg(s) {
+//     var region_select = document.querySelector('select.geo.region');
+//     var region = region_select.value;
+//     var bounds = region_bounds[region];
+//     var mi = bounds.getSouthWest();
+//     var ma = bounds.getNorthEast();
+
+//     var mipix = projection.fromLatLngToContainerPixel(mi);
+//     var mapix = projection.fromLatLngToContainerPixel(ma);
+//     return d3.select(this)
+//         .attr('width', mapix.x - mipix.x)
+//         .attr('height', mapix.y - mipix.y);
+// }
+
+// function transform_sample(d) {
+//     d = new google.maps.LatLng(+d.latitude, +d.longitude);
+//     d = projection.fromLatLngToDivPixel(d);
+//     return d3.select(this)
+//               .style('left', (d.x - padding) + 'px')
+//               .style('top', (d.y - padding) + 'px');
+// }
 
 dispatch.on('samples_loaded.geo', function(data) {
     if (layer) {
-        var samples = layer.selectAll('svg').data(data);
 
-        samples
-            .exit().remove();
+        markers.forEach(function(m) {
+            m.setMap(null);
+        });
 
-        samples
-            .each(transform_sample)
-            .enter().append('svg')
-                .each(transform_sample)
-                .attr('class', 'marker')
-                .append('circle')
-                    .attr('r', 5)
-                    .attr('cx', padding + 5)
-                    .attr('cy', padding + 5);
+        markers = data.map(function(d) {
+            var position = new google.maps.LatLng(+d.latitude, +d.longitude);
+            return new google.maps.Marker({
+                position: position,
+                map: map,
+            });
+        });
+
+
+
+
+        // var samples = layer.selectAll('circle').data(data);
+
+        // samples
+        //     .exit().remove();
+
+        // samples
+        //     .each(transform_sample)
+        //     .enter().append('circle')
+        //         .attr('class', 'sample')
+        //         .each(transform_sample)
+        //         .attr('r', 5)
+        //         .attr('cx', padding + 5)
+        //         .attr('cy', padding + 5);
     }
 });

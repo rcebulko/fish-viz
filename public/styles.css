@@ -1,6 +1,7 @@
-.date-range {
+#date-range {
     height: 400px;
-    margin-left: 80px;
+    margin: 100px;
+    float: left;
 }
 
 circle {
@@ -18,21 +19,29 @@ circle.taxa.selected {
     stroke:red;
 }
 
+div.stations {
+    /* background-color: black; */
+}
+
 .stations, .stations svg {
     position: absolute;
 }
 
-.stations svg {
-    width: 60px;
-    height: 20px;
-    padding-right: 100px;
-    font: 10px sans-serif;
-}
+/* .stations svg { */
+/*     width: 60px; */
+/*     height: 60px; */
+/*     padding-right: 100px; */
+/*     font: 10px sans-serif; */
+/* } */
 
 .stations circle {
     fill: red;
     stroke: black;
     stroke-width: 1.5px;
+}
+
+.stations circle.focus {
+    fill: blue;
 }
 
 path {
@@ -50,8 +59,31 @@ path {
 }
 
 #map {
-    width: 600px;
-    height: 600px;
+    width: 1000px;
+    height: 500px;
+    float: left;
+}
+
+#plots div {
+    float: left;
+    border-style: solid;
+    border-width: 2px;
+    margin: 4px;
+}
+
+#plots div.focus {
+    border-width: 4px;
+}
+
+#map svg {
+    overflow: visible;
+}
+
+#plots svg {
+    width: 200px;
+    height: 100px;
+    overflow: visible;
+    padding: 4px;
 }
 
 .content {

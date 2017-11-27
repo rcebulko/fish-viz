@@ -3,7 +3,6 @@ var radius = 10;
 var taxa_radius = Math.min(width, height)/2 - radius;
 
 var arc, x, y, color;
-var rects;
 
 function draw_taxatree() {
     // x = d3.scaleLinear().range([0, 2 * Math.PI]);
@@ -66,13 +65,14 @@ function draw_taxatree() {
 }
 
 dispatch.on('taxa_mouseover.taxatree', function(d) {
-    taxa_tooltip
-        .html(d.data.id())
-        .style('left', d3.event.pageX + 'px')
-        .style('top', (d3.event.pageY-28) + 'px')
-        .transition()
-            .duration(200)
-            .style('opacity', .9);
+    // TODO this is kinda annoying
+    // taxa_tooltip
+    //     .html(d.data.id())
+    //     .style('left', d3.event.pageX + 'px')
+    //     .style('top', (d3.event.pageY-28) + 'px')
+    //     .transition()
+    //         .duration(200)
+    //         .style('opacity', .9);
 });
 
 dispatch.on('taxa_mouseout.taxatree', function() {
@@ -121,11 +121,7 @@ function draw_tree() {
 
     var nodes = d3.partition()(taxatree_).descendants();
 
-    rects = g_taxa.selectAll('rect')
-            .data(nodes, d => d.data.id());
-
-    rects
-        .exit().remove();
+    var rects = g_taxa.selectAll('rect').data(nodes, d => d.data.id());
 
     // paths
     //     .enter().append('path')
@@ -144,6 +140,33 @@ function draw_tree() {
     //             .duration(400)
     //             .attr('d', arc);
 
+    var duration = 200;
+    
+    var minx0, maxx1, xf;
+
+//     var extent0 = d3.extent(nodes, d => d.x0);
+//     var extent1 = d3.extent(nodes, d => d.x1);
+//     xf = extent0[0] / (1 - maxx1 + minx0)
+
+    rects
+        .exit()
+            .on('click', null)
+            .each(function(d) {
+                if (!minx0 || d.x0 < minx0)
+                    minx0 = d.x0
+                if (!maxx1 || d.x1 > maxx1)
+                    maxx1 = d.x1
+                xf = minx0 / (1 - maxx1 + minx0)
+            })
+            .transition()
+                .duration(duration)
+                .attr('x', d => x(xf) + '%')
+                .attr('width', '0%')
+                // .attr('y', d => y(1) + '%')
+                // .attr('height', '0%')
+            .remove();
+
+    // TODO fix event handlers.. fast clicks behave weirdly
     rects
         .enter().append('rect')
             .style('fill', d => color(d.data.id()))
@@ -158,12 +181,10 @@ function draw_tree() {
             })
         .merge(rects)
             .transition()
-                .duration(400)
+                .duration(duration)
                 .attr('x', d => x(d.x0) + '%')
                 .attr('y', d => y(d.y0) + '%')
-                // .attr('width', d => x(d.x1) - x(d.x0))
-                // .attr('height', d => y(d.y1) - y(d.y0))
                 .attr('width', d => (x(d.x1) - x(d.x0)) + '%')
-                .attr('height', d => (y(1) - y(d.y0)) + '%')
+                .attr('height', d => (y(1) - y(d.y0)) + '%');
                 
 }
