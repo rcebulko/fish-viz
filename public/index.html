@@ -1,41 +1,36 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="utf-8">
+        <meta charset='utf-8'>
 
         <!-- App styles -->
         <link rel="stylesheet" href="styles.css">
         <!-- noUiSlider -->
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.css">
+
     </head>
-
     <body>
-        <div class="date-range"></div>
-
-        <div id="container">
-            <div class="content">
-                <div id="taxatree_select">
-                  Family / genus / species: <br/>
-                  <select multiple class="taxa family"></select>
-                  <select multiple class="taxa genus"></select>
-                  <select multiple class="taxa species"></select>
-                </div>
-
-                <svg id="taxatree" width="600" height="600"></svg>
+        <div id='container'>
+            <div class='content'>
+                <!-- <div id='taxatree_select'> -->
+                <!-- Family / genus / species: <br/> -->
+                <!-- <select multiple class='taxa family'></select> -->
+                <!-- <select multiple class='taxa genus'></select> -->
+                <!-- <select multiple class='taxa species'></select> -->
+                <!-- </div> -->
+                <svg id='taxatree' width='100%' height='200'></svg>
             </div>
 
-          <!-- <div class="content"> -->
-          <!--   <div> -->
-          <!--       Region: <br> -->
-          <!--       <select class="geo region" onchange="select_region_onchange()"></select> -->
-          <!--   </div> -->
-
-          <!--   <div id="map"></div> -->
-          <!-- </div> -->
+            <div class='content'>
+                <div>
+                    Region: <br/>
+                    <select class='geo region' onchange='select_region_onchange()'></select>
+                </div>
+                <div id='date-range'></div>
+                <div id='map'></div>
+                <div id='filters'></div>
+            </div>
         </div>
-
-        <!-- <svg id="geo" width="800" height="600"></svg> -->
-
 
         <!-- jQuery -->
         <script src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -53,16 +48,28 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.js"></script>
         <!-- Date range slider -->
         <script src="date-range.js"></script>
-<!--
-        <script src="data.js"></script>
-        <script src="taxa.js"></script>
 
-        <script src="taxatree_sel.js"></script>
-        <script src="taxatree.js"></script>
-        <script src="taxatree2.js"></script>
-        <script src="geo.js"></script>
+        <!-- FilterManager -->
+        <script src="filtermanager.js"></script>
+        <script src="timewarp.js"></script>
 
- -->
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&callback=initMap"></script>
+        <script src='data.js'></script>
+        <script src='taxa.js'></script>
+        <script src='taxatree3.js'></script>
+
+        <!-- <script src='taxatree_sel.js'></script> -->
+        <!-- <script src='taxatree.js'></script> -->
+        <!-- <script src='taxatree2.js'></script> -->
+
+        <!-- <script src='geo.js'></script> -->
+        <!-- <script src='geo2.js'></script> -->
+        <!-- <script src='geo3.js'></script> -->
+        <script src='geo_sel.js'></script>
+        <!-- <script src='geo_sel_markers.js'></script> -->
+        <script async defer src='https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&libraries=drawing&callback=initMap'></script>
+
+        <!-- <script src='geo_heatmap.js'></script> -->
+        <!-- <script async defer src='https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&libraries=visualization&callback=initMap'></script> -->
+
     </body>
 </html>
