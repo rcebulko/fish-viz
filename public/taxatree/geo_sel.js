@@ -55,8 +55,10 @@ function initMap() {
             strokeOpacity: 1,
             strokeWeight: 3,
             fillOpacity: .15,
+            // clickable: true,
             draggable: true,
             editable: true,
+            zIndex: 100,
         },
         map: map,
     });
@@ -202,6 +204,13 @@ function initMap() {
         this.div.classList.add('stations');
         this.getPanes().overlayMouseTarget.appendChild(this.div);
 
+        // makes clicks go through overlay?  (for rectangle)
+        // var me = this;
+        // google.maps.event.addDomListener(this.div, 'click', function() {
+        //     google.maps.event.trigger(map, 'click');
+        //     google.maps.event.trigger(me, 'click');
+        // });
+
         // select_region_onchange(); ???
     }
 
@@ -336,8 +345,7 @@ function on_filter_changed(filter) {
         var d = new Date();
         var dstr = d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds();
 
-        // console.log('Data fetched ' + dstr + ' for filter:', data.length);
-        console.log('Data fetched ' + dstr + ' for filter');
+        console.log('Data fetched ' + dstr + ' for filter:', data.length);
         dispatch.call('filter_loaded', null, filter, data);
     });
 }

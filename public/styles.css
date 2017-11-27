@@ -64,26 +64,42 @@ path {
     float: left;
 }
 
-#plots div {
-    float: left;
+#filters .filter {
+    display: inline-block;
     border-style: solid;
-    border-width: 2px;
+    border-width: 3px;
     margin: 4px;
 }
 
-#plots div.focus {
-    border-width: 4px;
+#filters .hmap {
+    display: inline-block;
+    /* border: 1px solid black; */
+    width: 10px;
+    height: 100px;
+    margin: 4px;
+}
+
+#filters .plot {
+    display: inline-block;
+    /* border: 1px solid black; */
+    width: 150px;
+    height: 100px;
+    margin: 4px;
+}
+
+/* #filters .focus { */
+/*     border-width: 4px; */
+/* } */
+
+#filters svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    /* padding: 4px; */
 }
 
 #map svg {
     overflow: visible;
-}
-
-#plots svg {
-    width: 200px;
-    height: 100px;
-    overflow: visible;
-    padding: 4px;
 }
 
 .content {
