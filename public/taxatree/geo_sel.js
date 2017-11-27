@@ -7,17 +7,17 @@ var colors = d3.scaleOrdinal(d3.schemeCategory10);
 // var geo_yscale = d3.scaleLinear().range([5, 95]);
 
 var region_bounds = {
-    'DRY TORT': {
-        latmi: +24.5420,
-        lngmi: -83.1037,
-        latma: +24.7364,
-        lngma: -82.7703,
-    },
     'FLA KEYS': {
         latmi: +24.4313,
         lngmi: -82.0109,
         latma: +25.7526,
         lngma: -80.0872,
+    },
+    'DRY TORT': {
+        latmi: +24.5420,
+        lngmi: -83.1037,
+        latma: +24.7364,
+        lngma: -82.7703,
     },
     'SEFCRI': {
         latmi: +25.7624,
@@ -27,10 +27,12 @@ var region_bounds = {
     },
 };
 
-var map, dm, bounds, rectangles = {}, plots = {};
+var map, dm, svgoverlay;
+var bounds;
 var region_select, region_rectangles;
-var overlay, layer, projection;
-var padding = 10;
+
+
+
 
 function initMap() {
     map = new google.maps.Map(d3.select('#map').node(), {
@@ -187,32 +189,46 @@ function initMap() {
         draw();
     });
 
-    overlay = new google.maps.OverlayView();
-    overlay.onAdd = function() {
-        // layer = d3.select(this.getPanes().overlayLayer)
-        layer = d3.select(this.getPanes().overlayMouseTarget)
-            .append('div')
-            .attr('class', 'stations');
+    // SVG GMAP Overlay
+    function SVGOverlay(map) {
+        this.setMap(map);
+        this.div = null
+    }
 
-        var me = this;
-        google.maps.event.addDomListener(layer.node(), 'click', function() {
-            console.log('CLICK');
-            // google.maps.event.trigger(me, 'click');
-        });
+    SVGOverlay.prototype = new google.maps.OverlayView();
 
-        overlay.draw = function() {
-            projection = this.getProjection();
-            layer
-                .selectAll('svg')
-                .each(transform_sample);
+    SVGOverlay.prototype.onAdd = function() {
+        this.div = document.createElement('div');
+        this.div.classList.add('stations');
+        this.getPanes().overlayMouseTarget.appendChild(this.div);
 
-            draw();
-        };
+        // select_region_onchange(); ???
+    }
 
-//         select_region_onchange();
+    SVGOverlay.prototype.draw = function() {
+        // var me = this;
+        d3.select(this.div)
+            .selectAll('svg')
+            .each(transform_sample);
+
+        draw();
     };
-    overlay.setMap(map);
+
+    SVGOverlay.prototype.svgs = function() {
+        return d3.select(this.div).selectAll('svg');
+    };
+
+    svgoverlay = new SVGOverlay(map);
 }
+
+function transform_sample(d) {
+    d = new google.maps.LatLng(+d.latitude, +d.longitude);
+    d = svgoverlay.getProjection().fromLatLngToDivPixel(d);
+    return d3.select(this)
+              .style('left', d.x + 'px')
+              .style('top', d.y + 'px');
+}
+
 
 function on_rectangle_change(event) {
     console.log(event);
@@ -237,17 +253,9 @@ function draw() {
     });
 }
 
-function transform_sample(d) {
-    d = new google.maps.LatLng(+d.latitude, +d.longitude);
-    d = projection.fromLatLngToDivPixel(d);
-    return d3.select(this)
-              .style('left', d.x + 'px')
-              .style('top', d.y + 'px');
-}
-
 dispatch.on('samples_loaded.geo', function(data) {
-    if (layer) {
-        var svgs = layer.selectAll('svg').data(data, d => d.id);
+    if (svgoverlay) {
+        var svgs = svgoverlay.svgs().data(data, d => d.id);
 
         svgs
             .exit()
@@ -256,6 +264,7 @@ dispatch.on('samples_loaded.geo', function(data) {
         var svgs_escope = svgs
             .enter().append('svg');
 
+        // var me = this;
         svgs_escope
             .merge(svgs)
                 .each(transform_sample);
@@ -270,9 +279,11 @@ dispatch.on('samples_loaded.geo', function(data) {
                     .on('mouseout', function(d) {
                         dispatch.call('geo_datum_unfocus', null, d);
                     });
-
     }
 });
+
+// dispatch.on('filter_datum_focus', function(d) {
+// });
 
 // TODO focus stuff, not important right now
 
@@ -362,9 +373,26 @@ dispatch.on('filter_loaded.data', function(filter, data) {
 });
 
 dispatch.on('filter_datum_focus.a', function(d) {
-    console.log('in:', d.id);
+    svgoverlay.svgs()
+        .selectAll('circle')
+            .filter(cd => cd.id == d.id)
+            .classed('focus', true);
+    svgoverlay.draw();
 });
 
 dispatch.on('filter_datum_unfocus.a', function(d) {
-    console.log('out:', d.id);
+    svgoverlay.svgs()
+        .selectAll('circle')
+            .filter(cd => cd.id == d.id)
+            .classed('focus', false);
+    svgoverlay.draw();
 });
+
+// dispatch.on('geo_datum_focus.a', function(d) {
+
+//     dispatch.call('datum_focus', null, d);
+// });
+
+// dispatch.on('geo_datum_unfocus.a', function(d) {
+//     dispatch.call('datum_unfocus', null, d);
+// });
