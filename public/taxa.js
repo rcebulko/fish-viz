@@ -6,11 +6,10 @@ var svg_taxa = d3.select('svg#taxatree'),
 var g_taxa = svg_taxa.append('g');
           // .attr('transform', 'translate(' + width/2 + ',' + height/2 + ')');
 
-// Adding taxa tooltip
-var taxa_tooltip = d3 .select('body')
-                      .append('div')
-                        .attr('class', 'taxa tooltip')
-                        .style('opacity', 0);
+// // Adding taxa tooltip
+var tip_taxa = d3.select('body').append('div')
+    .attr('class', 'taxa tooltip')
+    .style('opacity', 0);
 
 var taxa_select = {
   family: document.querySelector('select.taxa.family'),

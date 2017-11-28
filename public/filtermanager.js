@@ -1,4 +1,4 @@
-// Provides interface into filters
+// must be loaded after `dispatch`
 (function (exports) {
     var uduration = 200;
 
@@ -41,6 +41,7 @@
             .attr('width', '100%')
             .attr('height', '100%')
             .attr('fill', 'url(#hmap_gradient_' + this.fid + ')');
+        this.hmap_nbins = 20;
         this.hmap_circles_uscope = null;
         this.gextent = null;
 
@@ -50,6 +51,11 @@
         this.extents = {};
 
         this.instances[this.fid] = this;
+
+        var me = this;
+        dispatch.on('filter_plot_changed.' + this.fid, () => me.plot_plotUpdate());
+        // dispatch.on('filter_plot_changed.' + this.fid, () => me.plot_hmap());
+        dispatch.on('kernel_changed.' + this.fid, () => me.plot_hmap());
     };
 
     Filter.prototype.filters = function() {
@@ -105,7 +111,7 @@
         }, this);
 
         this.plot_plot(data);
-        this.plot_hmap(data);
+        // this.plot_hmap(data);
     };
 
     Filter.prototype.plot_plot = function(data) {
@@ -137,9 +143,7 @@
         this.plot_circles_uscope = circles_escope
             .merge(circles);
 
-        this.filters().forEach(function(filter) {
-            filter.plot_plotUpdate();
-        });
+        dispatch.call('filter_plot_changed');
     };
 
     Filter.prototype.plot_plotUpdate = function() {
@@ -150,36 +154,30 @@
                 .duration(uduration)
                 .attr('cx', d => topercstr(allscales.date(accessors.date(d))))
                 .attr('cy', d => topercstr(allscales.length(accessors.length(d))));
+
+        this.plot_hmap();
     };
 
-    Filter.prototype.plot_hmap = function(data) {
-        // var allextents = this.allextent();
+    Filter.prototype.plot_hmap = function() {
+        var data = this.plot_circles_uscope.data();
 
-        // TODO make global scaling...
-
-        var nbins = 20;
-        // var kscale = .05;
-        var kscale = .1;
+        // TODO select for the kscale?
+        var kscale = .01;
+        // var kscale = .1;
+        // var kscale = .5;
         var lscale = this.allscales().length;
         var laccessor = this.accessors.length;
-        for(var gdata=[], i = 0; i < nbins; i++) {
-            // var pbin = lscale.invert(i / (nbins - 1));
-            var pbin = i / (nbins - 1);
+        for(var gdata=[], i = 0; i < this.hmap_nbins; i++) {
+            // var pbin = lscale.invert(i / (this.hmap_nbins - 1));
+            var pbin = i / (this.hmap_nbins - 1);
             gdata[i] = d3.sum(data, function(d) {
                 var pd = lscale(laccessor(d));
-                return epanechikov_kernel((pbin - pd) / kscale);
-            // }) / data.length;
-            });
-        }
-
-        function epanechikov_kernel(u) {
-            if (u < -1 || u > 1)
-                return 0;
-            return (1 - u * u) * 3 / 4;
+                return Kernels.kernel((pbin - pd) / kscale);
+            }) / data.length;
+            // });
         }
 
         this.gextent = d3.extent(gdata);
-        console.log('normal gextent', this.gextent[0], this.gextent[1]);
         var stops = this.hmap_gradient.selectAll('stop').data(gdata);
 
         stops
@@ -187,20 +185,19 @@
                 .remove();
 
         var stops_escope = stops
-            .enter() .append('stop')
-                .attr('offset', (d, i) => i / (nbins-1))
+            .enter().append('stop')
+                .attr('offset', (d, i) => i / (this.hmap_nbins-1))
 
         this.plot_stops_uscope = stops_escope
             .merge(stops);
 
-        this.filters().forEach(function(filter) {
-            filter.plot_hmapUpdate();
-        });
+        // dispatch.call('filter_hmap_changed');
+        // TODO merge again...
+        this.plot_hmapUpdate();
     };
 
     Filter.prototype.plot_hmapUpdate = function() {
         var allgextent = this.allgextent();
-        console.log('all gextent', allgextent[0], allgextent[1]);
         var gcolor = d3.scaleLinear().domain(allgextent).range(['white', 'red']);
         // TODO the height should also be renormalized...
         this.plot_stops_uscope
@@ -301,3 +298,4 @@
         getFromFid,
     };
 }(window));
+

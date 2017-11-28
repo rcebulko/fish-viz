@@ -1,3 +1,5 @@
+// must be loaded after `dispatch`
+
 // node radius
 var radius = 10;
 var taxa_radius = Math.min(width, height)/2 - radius;
@@ -65,18 +67,22 @@ function draw_taxatree() {
 }
 
 dispatch.on('taxa_mouseover.taxatree', function(d) {
-    // TODO this is kinda annoying
-    // taxa_tooltip
-    //     .html(d.data.id())
-    //     .style('left', d3.event.pageX + 'px')
-    //     .style('top', (d3.event.pageY-28) + 'px')
-    //     .transition()
-    //         .duration(200)
-    //         .style('opacity', .9);
+    tip_taxa
+        .html(d.data.id())
+        .transition()
+            .duration(200)
+            .style('opacity', .9);
+    dispatch.call('taxa_mousemove', null, d);
+});
+
+dispatch.on('taxa_mousemove.taxatree', function(d) {
+    tip_taxa
+        .style('left', d3.event.pageX + 'px')
+        .style('top', (d3.event.pageY-32) + 'px')
 });
 
 dispatch.on('taxa_mouseout.taxatree', function() {
-    taxa_tooltip
+    tip_taxa
         .transition()
             .duration(500)
             .style('opacity', 0);
@@ -173,6 +179,9 @@ function draw_tree() {
             .on('mouseover', function(d) {
                 dispatch.call('taxa_mouseover', null, d);
             })
+            .on('mousemove', function(d) {
+                dispatch.call('taxa_mousemove', null, d);
+            })
             .on('mouseout', function(d) {
                 dispatch.call('taxa_mouseout', null, d);
             })
@@ -186,5 +195,4 @@ function draw_tree() {
                 .attr('y', d => y(d.y0) + '%')
                 .attr('width', d => (x(d.x1) - x(d.x0)) + '%')
                 .attr('height', d => (y(1) - y(d.y0)) + '%');
-                
 }
