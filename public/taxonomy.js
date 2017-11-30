@@ -1,13 +1,19 @@
 // Provides interface into taxonomy hierarchy
 // must be loaded after `api.js`
 (function (exports) {
-    var root;
+    var root,
+        initialized = false;
 
     function init(cb) {
-        API.fetchSpeciesData(data => {
-            data.forEach(s => new Species(s));
+        if (initialized) {
             cb(root);
-        });
+        } else {
+            initialized = true;
+            API.fetchSpeciesData(data => {
+                data.forEach(s => new Species(s));
+                cb(root);
+            });
+        }
     }
 
 
@@ -33,7 +39,6 @@
 
     // Instance methods
     Species.prototype.init = function () {
-        this._selected = true;
         this.instances[this.id()] = this;
         this.parent().addChild(this);
     };
@@ -44,10 +49,12 @@
     Species.prototype.select = function (state) {
         if (typeof state === 'undefined') { state = true; }
         this._selected = state;
+        this.parent().updateSelected();
     };
     Species.prototype.deselect = function () {
         this.select(false);
     };
+    Species.prototype.toggle = function () { this.select(!this.isSelected()); };
     Species.prototype.children = () => null;
     Species.prototype.family = function () { return this.genus().family(); };
     Species.prototype.genus = function () {
@@ -92,9 +99,14 @@
         if (typeof state === undefined) { state = true; }
         this._selected = state;
         this.children().forEach(c => c.select(state));
+        this.parent().updateSelected();
     };
     // `isSelected` can inherit from the Species method
     // `deselect` can inherit from the Species method
+    Genus.prototype.updateSelected = function () {
+        this._selected = this.children().some(c => c.isSelected());
+        this.parent().updateSelected();
+    }
     Genus.prototype.children = function () {
         return Object.values(this._children);
     }
@@ -139,6 +151,9 @@
     // `toString` can inherit from the Genus method
     Family.prototype.id = function () { return this._familyName; };
     Family.prototype.parent = () => root;
+    Family.prototype.updateSelected = function () {
+        this._selected = this.children().some(c => c.isSelected());
+    }
     // `isSelected` can inherit from the Genus method
     // `select` can inherit from the Genus method
     // `deselect` can inherit from the Species method

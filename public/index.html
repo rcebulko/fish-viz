@@ -8,6 +8,8 @@
         <link rel="stylesheet" href="third-party/split-pane.css">
         <!-- noUiSlider -->
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.css">
+        <!-- Select2 -->
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/css/select2.min.css">
 
     </head>
     <body>
@@ -42,6 +44,7 @@
                 <div class="split-pane fixed-left nested-pane">
                     <!-- Filters view -->
                     <div class="filters-wrapper split-pane-component full-height">
+                        <select class='taxonomy-select' multiple="multiple"></select>
                         <div id="filters" class='filters'></div>
                     </div>
 
@@ -75,6 +78,11 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.js"></script>
         <!-- Date range slider -->
         <script src="date-range.js"></script>
+
+        <!-- Select2 -->
+        <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.min.js"></script>
+        <!-- Taxonomy selection component -->
+        <script src="taxonomy-select.js"></script>
 
         <!-- Resizeable panels -->
         <script src="third-party/split-pane.js"></script>
