@@ -229,6 +229,12 @@ function initMap() {
     };
 
     svgoverlay = new SVGOverlay(map);
+
+    DateRange.onChange((min, max) => {
+        API.fetchSpeciesSamples('ACA BAHI', function(data) {
+            dispatch.call('samples_loaded', null, data);
+        });
+    });
 }
 
 function transform_sample(d) {

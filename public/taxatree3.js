@@ -89,7 +89,7 @@ dispatch.on('taxa_mouseout.taxatree', function() {
 });
 
 dispatch.on('taxa_click.taxatree', function(d) {
-    d.data.select(!d.data.isSelected());
+    d.data.toggle();//select(!d.data.isSelected());
     draw_tree();
 
   // g_taxa
@@ -147,7 +147,7 @@ function draw_tree() {
     //             .attr('d', arc);
 
     var duration = 200;
-    
+
     var minx0, maxx1, xf;
 
 //     var extent0 = d3.extent(nodes, d => d.x0);

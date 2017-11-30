@@ -1,7 +1,7 @@
 // must be loaded after `noUiSlider`
 // must be loaded after `api.js`
 (function (exports) {
-    var slider = document.querySelector('#date-range'),
+    var slider = document.querySelector('.date-range'),
 
         timestamp = str => new Date(str).getTime(),
         formatTimestamp = ts => new Date(ts).toLocaleDateString('en-US', {
@@ -13,13 +13,7 @@
         formatter = { to: formatTimestamp, from: timestamp };
 
     function onChange(callback) {
-        slider.noUiSlider.on('update', values => {
-            callback(new Date(+values[0]), new Date(+values[1]));
-        });
-    }
-
-    function onRealChange(callback) {
-        slider.noUiSlider.on('change', values => {
+        slider.noUiSlider.on('set', values => {
             callback(new Date(+values[0]), new Date(+values[1]));
         });
     }
@@ -34,12 +28,10 @@
         orientation: 'vertical',
         tooltips: [formatter, formatter],
     });
+    onChange((min, max) => console.log(min, max))
 
     // TODO: This does not belong here
     onChange(API.setDateRange);
 
-    exports.DateRange = {
-        onChange,
-        onRealChange,
-    }
+    exports.DateRange = { onChange };
 }(window));
