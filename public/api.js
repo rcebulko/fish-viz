@@ -41,7 +41,7 @@
     // fetch samples with arbitrary filters
     function fetchSampleData(filterOpts, callback) {
         $.get(API_PATH + 'sample',
-            Object.assign({}, currentFilters, filterOpts),
+            Object.assign({ limit: 100 }, currentFilters, filterOpts),
             callback
         );
     }
