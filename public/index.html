@@ -5,49 +5,56 @@
 
         <!-- App styles -->
         <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="third-party/split-pane.css">
         <!-- noUiSlider -->
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.css">
 
     </head>
     <body>
-        <div class="container">
-
-            <div class="content">
-                <!-- <div id="taxatree_select"> -->
-                <!-- Family / genus / species: <br/> -->
-                <!-- <select multiple class="taxa family"></select> -->
-                <!-- <select multiple class="taxa genus"></select> -->
-                <!-- <select multiple class="taxa species"></select> -->
-                <!-- </div> -->
-                <svg id="taxatree" width="100%" height="200"></svg>
-            </div>
-
-            <div class=container>
+        <!-- Controls and filter settings -->
+        <div class="control-bar" style="display: none;">
+            <label class="control-label">
                 Region:
                 <select class="geo region" onchange="select_region_onchange()"></select>
-                Kernel:
+            </label>
+            <br>
+            <label class="control-label">Kernel:
                 <select class="filter kernel" onchange="select_kernel_onchange()">
                     <!-- TODO get these dynamically from Kernels object -->
                     <option value="uniform">Uniform</option>
                     <option value="triangular">Triangular</option>
                     <option value="triweight">Triweight</option>
                     <option value="epanechikov">Epanechikov</option>
-                </select>
+                </select></label>
+        </div>
+
+        <!-- Wrapper for horizontal divider & resizing -->
+        <div class="split-pane fixed-bottom outer-pane">
+            <!-- Taxonomy hierarchy view -->
+            <div class="taxatree-wrapper split-pane-component">
+                <svg id="taxatree" class="full-width full-height"></svg>
             </div>
 
-            <div class="container">
-                <div class="content">
-                    <div id="date-range"></div>
-                </div>
+            <div class="split-pane-divider horizontal"></div>
 
-                <div class="content">
-                    <div id="map"></div>
-                </div>
-            </div>
+            <!-- Wrapper for vertical divider & resizing -->
+            <div class="main-panel split-pane-component">
+                <div class="split-pane fixed-left nested-pane">
+                    <!-- Filters view -->
+                    <div class="filters-wrapper split-pane-component full-height">
+                        <div id="filters" class='filters'></div>
+                    </div>
 
-            <div class="container">
-                <div class="content">
-                    <div id="filters"></div>
+                    <div class="split-pane-divider vertical"></div>
+
+                    <!-- Map view -->
+                    <div class="map-wrapper split-pane-component">
+                        <div id="map"></div>
+
+                        <div class="date-range-wrapper">
+                            <div class='date-range'></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -68,6 +75,16 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.js"></script>
         <!-- Date range slider -->
         <script src="date-range.js"></script>
+
+        <!-- Resizeable panels -->
+        <script src="third-party/split-pane.js"></script>
+        <script type="text/javascript">
+            $(function () {
+                $('.split-pane').splitPane();
+                $('.outer-pane').splitPane('firstComponentSize', 150);
+                $('.nested-pane').splitPane('firstComponentSize', 250);
+            });
+        </script>
 
         <!-- Dispatch and custom events -->
         <script src="dispatch.js"></script>

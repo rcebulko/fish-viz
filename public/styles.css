@@ -1,9 +1,3 @@
-#date-range {
-    height: 500px;
-    margin-left: 100px;
-    margin-right: 10px;;
-}
-
 circle {
     stroke: #05668D;
     fill: white;
@@ -59,17 +53,8 @@ path {
 }
 
 #map {
-    width: 1500px;
-    /* width: 100%; */
-    height: 500px;
-    /* float: left; */
-}
-
-#filters .filter {
-    display: inline-block;
-    border-style: solid;
-    border-width: 3px;
-    margin: 4px;
+    width: 100%;
+    height: 100%;
 }
 
 #filters .hmap {
@@ -96,24 +81,114 @@ path {
     width: 100%;
     height: 100%;
     overflow: visible;
-    /* padding: 4px; */
 }
 
 #map svg {
     overflow: visible;
 }
 
-.container {
-    width: 100%;
-    clear: both;
-    border: 1px solid black;
-}
-
-.content {
-    float: left;
-    border: 1px solid black;
-}
-
 select.taxa {
     height: 20cm;
+}
+
+
+
+html, body {
+    height: 100%;
+    min-height: 100%;
+}
+body {
+    margin: 0;
+}
+
+.frame {
+    /*position: absolute;*/
+}
+
+.full-width { width: 100%; }
+.full-height { width: 100%; }
+
+.taxatree-wrapper, .map-wrapper {
+    overflow: hidden !important;
+}
+
+.taxatree-wrapper {
+    /* Plugin overrides */
+    z-index: 10 !important;
+}
+
+
+.filter {
+    display: inline-block;
+    width: 100%;
+    max-width: 250px;
+
+    border-style: solid;
+    border-width: 3px;
+
+    margin-bottom: 5px;
+}
+.filters-wrapper {
+    padding: 10px 15px;
+
+    box-sizing: border-box;
+    overflow: auto;
+}
+
+
+/* controls and settings */
+.date-range-wrapper {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 80px;
+
+    margin: 15px;
+}
+.date-range { height: 100%; }
+
+
+/* resizeable components */
+.split-pane-component {
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.split-pane-divider.horizontal {
+    height: 3px;
+    width: 100%;
+    top: 150px;
+}
+
+.split-pane-divider.vertical {
+    width: 3px;
+    height: 100%;
+    left: 250px;
+}
+
+.split-pane-divider {
+    border: 1px solid black;
+    background-color: gray;
+}
+
+
+/* initial panel sizing */
+.taxatree-wrapper {
+    height: 150px;
+    min-height: 150px;
+}
+
+.main-panel {
+    top: 150px;
+    margin-top: 3px;
+}
+
+.filters-wrapper {
+    width: 250px;
+    min-width: 250px;
+}
+
+.map-wrapper {
+    left: 250px;
+    margin-left: 3px;
 }
