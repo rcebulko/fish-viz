@@ -1,7 +1,9 @@
-// must be loaded after `noUiSlider`
-// must be loaded after `api.js`
+// Dependencies:
+// - noUiSlider
+
+window.Controls = window.Controls || {};
 (function (exports) {
-    var slider = document.querySelector('.date-range'),
+    var slider = null,
 
         timestamp = str => new Date(str).getTime(),
         formatTimestamp = ts => new Date(ts).toLocaleDateString('en-US', {
@@ -10,28 +12,39 @@
 
         year = timestamp('2001') - timestamp('2000'),
 
-        formatter = { to: formatTimestamp, from: timestamp };
+        formatter = { to: formatTimestamp, from: timestamp }
+        range = [timestamp('2013'), timestamp('2016')];
 
-    function onChange(callback) {
-        slider.noUiSlider.on('set', values => {
-            callback(new Date(+values[0]), new Date(+values[1]));
+
+    function init() {
+        slider = noUiSlider.create(document.querySelector('.date-range'), {
+            range: { min: timestamp('1999'), max: timestamp('2018') },
+            step: year / 12, // step by month (roughly)
+            start: range,
+            connect: [false, true, false],
+            limit: 10 * year, // limit to 10 year range
+            behaviour: 'drag',
+            orientation: 'vertical',
+            tooltips: [formatter, formatter],
         });
+        slider.on('set', changed);
+        changed(range)
     }
 
-    noUiSlider.create(slider, {
-        range: { min: timestamp('1999'), max: timestamp('2018') },
-        step: year / 12, // step by month (roughly)
-        start: [timestamp('2013'), timestamp('2016')],
-        connect: [false, true, false],
-        limit: 10 * year, // limit to 10 year range
-        behaviour: 'drag',
-        orientation: 'vertical',
-        tooltips: [formatter, formatter],
-    });
-    onChange((min, max) => console.log(min, max))
+    function changed(values) {
+        range = [new Date(+values[0]), new Date(+values[1])];
 
-    // TODO: This does not belong here
-    onChange(API.setDateRange);
+        console.info('Set date range to [%s, %s]',
+            formatTimestamp(range[0]),
+            formatTimestamp(range[1]));
+    }
 
-    exports.DateRange = { onChange };
-}(window));
+    function onChange(callback) {
+        slider.on('set', () => callback(range));
+    }
+
+    function get() { return range; }
+
+
+    Object.assign(exports, { init, onChange, get });
+}(window.Controls.DateRange = {}));
