@@ -46,5 +46,5 @@ window.Controls = window.Controls || {};
     function get() { return range; }
 
 
-    Object.assign(exports, { init, onChange, get });
+    Object.assign(exports, { init, onChange, get, formatTimestamp });
 }(window.Controls.DateRange = {}));
