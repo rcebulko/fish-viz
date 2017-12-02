@@ -30,6 +30,18 @@ app.use('/api', sqlRouter(schema.Sample, {
         delete req.query.species;
 
         schema.Sample.findAll({
+            attributes: [
+                'id',
+                'species_code',
+                'date',
+                'latitude',
+                'longitude',
+                'depth',
+                'length',
+                'number',
+                'protected',
+                'region',
+            ],
             where: req.query,
             limit: limit,
             include: [{
@@ -37,6 +49,7 @@ app.use('/api', sqlRouter(schema.Sample, {
                 where: speciesWhere
             }]
         }).then(dbModel => {
+            dbModel.forEach(s => delete s.dataValues.species);
             res.json(dbModel);
         }).catch(err => {
             res.json(err);
