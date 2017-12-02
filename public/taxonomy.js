@@ -41,20 +41,30 @@
     Species.prototype.init = function () {
         this.instances[this.id()] = this;
         this.parent().addChild(this);
+        this.enabled = true;
     };
-    Species.prototype.toString = function () { return this._commonName; };
+    Species.prototype.toString = function () {
+        return this._scientificName + ' (' + this._commonName + ')';
+    };
     Species.prototype.id = function () { return this._code; };
     Species.prototype.parent = function () { return this.genus(); };
     Species.prototype.isSelected = function () { return this._selected; };
-    Species.prototype.select = function (state) {
+    Species.prototype.select = function (state, noUpdateParent) {
         if (typeof state === 'undefined') { state = true; }
         this._selected = state;
-        this.parent().updateSelected();
+
+        if (!noUpdateParent) { this.parent().updateSelected(); }
     };
-    Species.prototype.deselect = function () {
-        this.select(false);
+    Species.prototype.deselect = function () { this.select(false); };
+    Species.prototype.isEnabled = function () { return this._enabled; };
+    Species.prototype.enable = function (state, noUpdateParent) {
+        if (typeof state === 'undefined') { state = true; }
+        this._enabled = state;
+
+        if (!noUpdateParent) { this.parent().updateEnabled(); }
     };
-    Species.prototype.toggle = function () { this.select(!this.isSelected()); };
+    Species.prototype.disable = function () { this.enable(false); };
+    Species.prototype.toggle = function () { this.enable(!this.isEnabled()); };
     Species.prototype.children = () => null;
     Species.prototype.family = function () { return this.genus().family(); };
     Species.prototype.genus = function () {
@@ -91,21 +101,42 @@
     Genus.prototype.instances = {};
 
     // Instance methods
-    // `init` can inherit from the Species method
-    Genus.prototype.toString = function () { return this.id(); };
+    Genus.prototype.toString = function () {
+        return this.id() + ' (' + this.children().length + ' species)';
+    };
     Genus.prototype.id = function () { return this._genusName; };
     Genus.prototype.parent = function () { return this.family(); };
-    Genus.prototype.select = function (state) {
-        if (typeof state === undefined) { state = true; }
+    Genus.prototype.select = function (state, noUpdateParent) {
+        if (typeof state === 'undefined') { state = true; }
         this._selected = state;
-        this.children().forEach(c => c.select(state));
-        this.parent().updateSelected();
+        this.children().forEach(c => c.select(state, true));
+
+        if (this.parent() && !noUpdateParent) {
+            this.parent().updateSelected();
+        }
     };
-    // `isSelected` can inherit from the Species method
-    // `deselect` can inherit from the Species method
+    Genus.prototype.enable = function (state, noUpdateParent) {
+        if (typeof state === 'undefined') { state = true; }
+        this._enabled = state;
+        this.children().forEach(c => c.enable(state, true));
+
+        if (this.parent() && !noUpdateParent) {
+            this.parent().updateEnabled();
+        }
+    };
     Genus.prototype.updateSelected = function () {
         this._selected = this.children().some(c => c.isSelected());
-        this.parent().updateSelected();
+
+        if (this.parent()) {
+            this.parent().updateSelected();
+        }
+    }
+    Genus.prototype.updateEnabled = function () {
+        this._enabled = this.children().some(c => c.isEnabled());
+
+        if (this.parent()) {
+            this.parent().updateEnabled();
+        }
     }
     Genus.prototype.children = function () {
         return Object.values(this._children);
@@ -147,19 +178,11 @@
     Family.prototype.instances = {};
 
     // Instance methods
-    // `init` can inherit from the Species method
-    // `toString` can inherit from the Genus method
+    Family.prototype.toString = function () {
+        return this.id() + ' (' + this.children().length + ' genuses)';
+    }
     Family.prototype.id = function () { return this._familyName; };
     Family.prototype.parent = () => root;
-    Family.prototype.updateSelected = function () {
-        this._selected = this.children().some(c => c.isSelected());
-    }
-    // `isSelected` can inherit from the Genus method
-    // `select` can inherit from the Genus method
-    // `deselect` can inherit from the Species method
-    // `child` can inherit from the Genus method
-    // `children` can inherit from the Genus method
-    // `addChild` can inherit from the Genus method
 
 
     ////////////////
@@ -174,12 +197,11 @@
     Root.prototype = new Family();
 
     // Instance methods
-    // `toString` can inherit from the Genus method
+    Root.prototype.toString = function () {
+        return this.id() + ' (' + this.children().length + ' families)';
+    }
     Root.prototype.id = () => 'Root';
     Root.prototype.parent = () => null;
-    // `child` can inherit from the Genus method
-    // `children` can inherit from the Genus method
-    // `addChild` can inherit from the Genus method
 
 
     root = new Root();

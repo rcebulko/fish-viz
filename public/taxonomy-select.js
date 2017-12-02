@@ -2,7 +2,7 @@
 // must be loaded after `taxonomy.js`
 $(() => {
     var $sel = $('.taxonomy-select'),
-        selected = [];
+        currentSelection = [];
 
     function selectData() {
         return ['species', 'genuses', 'families'].map(groupData);
@@ -23,39 +23,20 @@ $(() => {
         return { text: label, children: children }
     }
 
-    function onChange() {
-        var newVal = $(this).val(),
-            added = [],
-            removed = [],
-            i, type_id;
+    function onChange() {;
+        // deselect all nodes to start
+        Taxonomy.root.deselect();
+        // get selected type__id keys
+        $(this).val()
+            // split keys
+            .map(val => val.split('__'))
+            // collect nodes from taxonomy
+            .map(type_id => Taxonomy[type_id[0]][type_id[1]])
+            // select nodes
+            .forEach(n => n.select());
 
-        if (newVal.length > selected.length) {
-            for (i = 0; i < newVal.length; ++i) {
-                if (selected.indexOf(newVal[i]) == -1) {
-                    added.push(newVal[i]);
-                }
-            }
-
-            for (i = 0; i < added.length; ++i) {
-                type_id = added[i].split('__');
-                Taxonomy[type_id[0]][type_id[1]].select();
-                console.log('Added ' + type_id[0] + ' ' + type_id[1]);
-            }
-        } else {
-            for (i = 0; i < selected.length; ++i) {
-                if (newVal.indexOf(selected[i]) == -1) {
-                    removed.push(selected[i]);
-                }
-            }
-
-            for (i = 0; i < removed.length; ++i) {
-                type_id = removed[i].split('__');
-                Taxonomy[type_id[0]][type_id[1]].deselect();
-                console.log('Removed ' + type_id[0] + ' ' + type_id[1]);
-            }
-        }
-
-        selected = newVal;
+        // TODO: This is not ideal, the tree should be listening for a change
+        // redraw tree
         draw_tree();
     }
 
