@@ -33,4 +33,4 @@
 
 
     Object.assign(exports, { init, onChange, get })
-}(window.Controls = window.Controls || {}))
+}(window.Controls = window.Controls || {}));

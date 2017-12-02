@@ -6,6 +6,7 @@
 
     // fetch taxonomy data
     function fetchSpecies() {
+        console.info('Fetching species data');
         return $.get(API_PATH + 'species');
     }
 
