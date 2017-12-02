@@ -13,23 +13,6 @@
 
     </head>
     <body>
-        <!-- Controls and filter settings -->
-        <div class="control-bar" style="display: none;">
-            <label class="control-label">
-                Region:
-                <select class="geo region" onchange="select_region_onchange()"></select>
-            </label>
-            <br>
-            <label class="control-label">Kernel:
-                <select class="filter kernel" onchange="select_kernel_onchange()">
-                    <!-- TODO get these dynamically from Kernels object -->
-                    <option value="uniform">Uniform</option>
-                    <option value="triangular">Triangular</option>
-                    <option value="triweight">Triweight</option>
-                    <option value="epanechikov">Epanechikov</option>
-                </select></label>
-        </div>
-
         <!-- Wrapper for horizontal divider & resizing -->
         <div class="split-pane fixed-bottom outer-pane">
             <!-- Taxonomy hierarchy view -->
@@ -57,6 +40,31 @@
                         <div class="date-range-wrapper">
                             <div class='date-range'></div>
                         </div>
+
+                        <!-- Controls and filter settings -->
+                        <div class="control-panel hidden">
+                            <div class="control-panel-controls">
+                                <label class="control-label">
+                                    Region:
+                                    <select class="geo region" onchange="select_region_onchange()"></select>
+                                </label>
+                                <br>
+                                <label class="control-label">Kernel:
+                                    <select class="filter kernel" onchange="select_kernel_onchange()">
+                                        <!-- TODO get these dynamically from Kernels object -->
+                                        <option value="uniform">Uniform</option>
+                                        <option value="triangular">Triangular</option>
+                                        <option value="triweight">Triweight</option>
+                                        <option value="epanechikov">Epanechikov</option>
+                                    </select>
+                                </label>
+                            </div>
+
+                            <div class="control-panel-hide">(hide)</div>
+                            <div class="control-panel-show">
+                                <img src="img/gear.png">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -73,6 +81,7 @@
         <!-- Core classes -->
         <script src="api.js"></script>
         <script src="taxonomy.js"></script>
+        <script src="controls.js"></script>
 
         <!-- noUiSlider -->
         <script src="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.js"></script>
