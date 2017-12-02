@@ -1,19 +1,21 @@
-// Provides interface into taxonomy hierarchy
-// must be loaded after `api.js`
+// Dependencies:
+// - api
+
 (function (exports) {
     var root,
-        initialized = false;
+        initPromise = null;
 
-    function init(cb) {
-        if (initialized) {
-            cb(root);
-        } else {
-            initialized = true;
-            API.fetchSpeciesData(data => {
+
+    function init() {
+        if (initPromise === null) {
+            root = new Root();
+            initPromise = API.fetchSpecies().then(data => {
                 data.forEach(s => new Species(s));
-                cb(root);
+                return root;
             });
         }
+
+        return initPromise;
     }
 
 
@@ -206,20 +208,11 @@
     Root.prototype.parent = () => null;
 
 
-    root = new Root();
-
-    exports.Taxonomy = {
+    Object.assign(exports, {
         species: Species.prototype.instances,
         genuses: Genus.prototype.instances,
         families: Family.prototype.instances,
         root,
         init
-    }
-}(window));
-
-// "code": "ABU SAXA",
-// "species": "saxatilis",
-// "genus": "Abudefduf",
-// "family": "Pomacentridae",
-// "scientificName": "Abudefduf saxatilis",
-// "commonName": "Sergeant Major",
+    });
+}(window.Taxonomy = window.Taxonomy || {}));
