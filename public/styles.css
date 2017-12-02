@@ -101,10 +101,6 @@ body {
     margin: 0;
 }
 
-.frame {
-    /*position: absolute;*/
-}
-
 .full-width { width: 100%; }
 .full-height { width: 100%; }
 
@@ -113,6 +109,8 @@ body {
 }
 
 .taxatree-wrapper {
+    cursor: pointer;
+
     /* Plugin overrides */
     z-index: 10 !important;
 }

@@ -41,7 +41,7 @@
     Species.prototype.init = function () {
         this.instances[this.id()] = this;
         this.parent().addChild(this);
-        this.enabled = true;
+        this._enabled = true;
     };
     Species.prototype.toString = function () {
         return this._scientificName + ' (' + this._commonName + ')';
@@ -197,6 +197,8 @@
     Root.prototype = new Family();
 
     // Instance methods
+    Root.prototype.isSelected = () => true;
+    Root.prototype.isEnabled = () => true;
     Root.prototype.toString = function () {
         return this.id() + ' (' + this.children().length + ' families)';
     }

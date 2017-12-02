@@ -89,7 +89,9 @@ dispatch.on('taxa_mouseout.taxatree', function() {
 });
 
 dispatch.on('taxa_click.taxatree', function(d) {
+    console.log('Toggling ' + d.data, d.data.isEnabled())
     d.data.toggle();//select(!d.data.isSelected());
+    console.log(d.data.isEnabled())
     draw_tree();
 
   // g_taxa
@@ -174,8 +176,11 @@ function draw_tree() {
 
     // TODO fix event handlers.. fast clicks behave weirdly
     rects
+        .style('fill', d => d.data.isEnabled() ? color(d.data.id()) : '#333')
         .enter().append('rect')
-            .style('fill', d => color(d.data.id()))
+            .style('stroke-width', 2)
+            .style('stroke', '#000')
+            .style('fill', d => d.data.isEnabled() ? color(d.data.id()) : '#000')
             .on('mouseover', function(d) {
                 dispatch.call('taxa_mouseover', null, d);
             })
