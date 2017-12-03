@@ -5,7 +5,9 @@
 (function (exports) {
     var root,
         initPromise = null,
-        scheme = new ColorScheme;
+        scheme = new ColorScheme,
+        enabled = [],
+        enabledLimit = 5;
 
 
     function init() {
@@ -23,10 +25,10 @@
         return initPromise;
     }
 
-    function pickColors(seed) {
+    function pickColors(seed, variation) {
         var colors = seed.distance(0.4)
             .scheme('analogic')
-            .variation('pastel')
+            .variation(variation)
             .colors();
 
         // remove the light colors (2, 6, and 10) and any pure grays
@@ -37,6 +39,10 @@
             .filter(c => !(
                 c.slice(0, 2) === c.slice(2, 4) &&
                 c.slice(2, 4) === c.slice(4, 6)) );
+    }
+
+    function cullEnabled() {
+        enabled = enabled.slice(-enabledLimit);
     }
 
 
@@ -86,6 +92,16 @@
         this._enabled = state;
 
         if (!noUpdateParent) { this.parent().updateEnabled(); }
+
+        if (!state) {
+            enabled = enabled.filter(s => s !== this);
+        } else if (enabled.indexOf(this) === -1) {
+            enabled.push(this);
+        }
+
+        if (enabled.length > enabledLimit) {
+            enabled[0].disable();
+        }
     };
     Species.prototype.disable = function () { this.enable(false); };
     Species.prototype.toggle = function () { this.enable(!this.isEnabled()); };
@@ -116,10 +132,7 @@
             .join('<br>');
     }
     Species.prototype.colorize = function (color) {
-        this._color = color;
-    }
-    Species.prototype.color = function () {
-        return this.isEnabled() ? this._color : '#666'
+        this.color = color;
     }
 
 
@@ -170,7 +183,6 @@
         }
     };
     Genus.prototype.updateSelected = function () {
-        console.log('Update enabled', this)
         this._selected = this.children().some(c => c.isSelected());
 
         if (this.parent()) {
@@ -180,7 +192,6 @@
     Genus.prototype.updateEnabled = function () {
         this._enabled = this.children()
             .some(c => c.isSelected() && c.isEnabled());
-        console.log(this, this._enabled, this.children().map(c => c.isSelected() && c.isEnabled()))
 
         if (this.parent()) {
             this.parent().updateEnabled();
@@ -212,11 +223,11 @@
         ];
     }
     Genus.prototype.colorize = function (color) {
-        var colors = pickColors(scheme.from_hex(color)),
+        var colors = pickColors(scheme.from_hex(color), 'default'),
             children = this.children(),
             i;
 
-        this._color = color;
+        this.color = color;
 
         for (i = 0; i < children.length; ++i) {
             children[i].colorize(colors[(i + 1) % colors.length])
@@ -256,11 +267,11 @@
         ];
     }
     Family.prototype.colorize = function (hue) {
-        var colors = pickColors(scheme.from_hue(hue)),
+        var colors = pickColors(scheme.from_hue(hue), 'default'),
             children = this.children(),
             i;
 
-        this._color = colors[0];
+        this.color = colors[0];
 
         for (i = 0; i < children.length; ++i) {
             children[i].colorize(colors[(i + 1) % colors.length])
@@ -293,7 +304,7 @@
             stagger = children.length % 3 === 0 ? 4 : 3,
             i;
 
-        this._color = '#CCC';
+        this.color = '#CCC';
 
         for (i = 0; i < children.length; ++i) {
             children[(i * stagger) % children.length].colorize((i * 3) % 255);
@@ -307,6 +318,7 @@
         species: Species.prototype.instances,
         genuses: Genus.prototype.instances,
         families: Family.prototype.instances,
+        cullEnabled,
         root,
         init
     });

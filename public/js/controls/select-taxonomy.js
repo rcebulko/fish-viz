@@ -54,6 +54,7 @@ window.Controls = window.Controls || {};
 
         // select nodes
         selection.forEach(n => n.select());
+        Taxonomy.cullEnabled();
         console.info('Selection includes %d species', selection.length);
     }
 

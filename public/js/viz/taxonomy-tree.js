@@ -1,6 +1,7 @@
 // Dependencies:
 // - d3
 // - taxonomy
+// - select-taxonomy
 
 window.Viz = window.Viz || {};
 (function (exports) {
@@ -13,7 +14,7 @@ window.Viz = window.Viz || {};
         width = 0,
         height = 0,
 
-        fillColor = d => d.data.color(),
+        // fillColor = d => d.data.color(),
         // fillColor = d => d.data.isEnabled() ? d.data.color : '#333',
         // fillColor = d => d.data.isEnabled() ? color(d.data.id()) : '#333',
 
@@ -61,7 +62,9 @@ window.Viz = window.Viz || {};
         nodes = d3.partition()(tree).descendants();
         rects = viz.selectAll('rect').data(nodes, d => d.data.id());
 
-        rects.style('fill', fillColor);
+        rects.style('fill', d => d.data.color)
+            .style('opacity', d => d.data.isEnabled() ? 1 : 0.25)
+            .style('stroke-width', d => d.data.isEnabled() ? 2 : 1);
         rects.exit()
             .on('click', null)
             .each(function(d) {
@@ -76,8 +79,9 @@ window.Viz = window.Viz || {};
 
         rects
             .enter().append('rect')
-                .style('fill', fillColor)
-                .style('stroke-width', 2)
+                .style('fill', d => d.data.color)
+                .style('opacity', d => d.data.isEnabled() ? 1 : 0.25)
+                .style('stroke-width', d => d.data.isEnabled() ? 2 : 1)
                 .style('stroke', '#000')
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide)
@@ -93,10 +97,11 @@ window.Viz = window.Viz || {};
 
     function toggle(d) {
         d.data.toggle();
+        Taxonomy.cullEnabled();
         console.info(
             (d.data.isEnabled() ? 'En' : 'Dis') +
             'abled ' +
-            d.data)
+            d.data);
 
         $(document).trigger('taxonomy_change.toggled', d.data);
     }
