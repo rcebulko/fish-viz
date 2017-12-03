@@ -1,5 +1,7 @@
 (function (exports) {
     function init() {
+        console.info('Initializing visualizations');
+
         Viz.TaxonomyTree.init();
         Viz.Map.init();
     }
