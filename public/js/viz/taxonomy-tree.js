@@ -14,10 +14,6 @@ window.Viz = window.Viz || {};
         width = 0,
         height = 0,
 
-        // fillColor = d => d.data.color(),
-        // fillColor = d => d.data.isEnabled() ? d.data.color : '#333',
-        // fillColor = d => d.data.isEnabled() ? color(d.data.id()) : '#333',
-
         tip = d3.tip().attr('class', 'd3-tip')
             .html(d => d.data.html())
             .direction('s');
