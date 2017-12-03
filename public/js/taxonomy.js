@@ -114,6 +114,7 @@
         if (typeof state === 'undefined') { state = true; }
         this._selected = state;
         this.children().forEach(c => c.select(state, true));
+        this.enable(state, noUpdateParent);
 
         if (this.parent() && !noUpdateParent) {
             this.parent().updateSelected();
