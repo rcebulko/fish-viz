@@ -33,7 +33,7 @@
             dateRange = Controls.DateRange.get(),
             species = Controls.SelectTaxonomy.get()
                 .map(n => n.allSpecies())
-                .reduce((acc, arr) => acc.concat(arr));
+                .reduce((acc, arr) => acc.concat(arr), []);
 
         return Promise.all(
             species
