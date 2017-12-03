@@ -8,6 +8,8 @@ window.Controls = window.Controls || {};
 
 
     function init() {
+        console.info('Initializing region selection control');
+
         $region = $('.geo-region');
         $region.change(changed);
         changed();

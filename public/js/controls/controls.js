@@ -5,6 +5,8 @@
 
 (function (exports) {
     function init() {
+        console.info('Initializing controls');
+
         enableShowHide();
 
         Controls.DateRange.init();

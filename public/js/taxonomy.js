@@ -7,6 +7,8 @@
 
 
     function init() {
+        console.debug('Initializing taxonomy');
+
         if (initPromise === null) {
             initPromise = API.fetchSpecies().then(data => {
                 data.forEach(s => new Species(s));

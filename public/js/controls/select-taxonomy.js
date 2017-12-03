@@ -27,6 +27,8 @@ window.Controls = window.Controls || {};
     }
 
     function init() {
+        console.info('Initializing taxonomy selection control');
+
         $select = $('.taxonomy-select');
 
         return Taxonomy.init().then(() => {

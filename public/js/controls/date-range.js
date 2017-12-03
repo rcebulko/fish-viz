@@ -17,6 +17,8 @@ window.Controls = window.Controls || {};
 
 
     function init() {
+        console.info('Initializing date range slider control');
+
         slider = noUiSlider.create(document.querySelector('.date-range'), {
             range: { min: timestamp('1999'), max: timestamp('2018') },
             step: year / 12, // step by month (roughly)
