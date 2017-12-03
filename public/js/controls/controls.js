@@ -5,10 +5,11 @@
 
 (function (exports) {
     function init() {
+        enableShowHide();
+
         Controls.DateRange.init();
         Controls.Region.init();
-
-        enableShowHide();
+        return Controls.SelectTaxonomy.init();
     }
 
     function enableShowHide() {

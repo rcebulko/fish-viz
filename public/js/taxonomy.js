@@ -8,7 +8,6 @@
 
     function init() {
         if (initPromise === null) {
-            root = new Root();
             initPromise = API.fetchSpecies().then(data => {
                 data.forEach(s => new Species(s));
                 return root;
@@ -208,6 +207,8 @@
     Root.prototype.id = () => 'Root';
     Root.prototype.parent = () => null;
 
+
+    root = new Root();
 
     Object.assign(exports, {
         species: Species.prototype.instances,

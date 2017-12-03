@@ -1,8 +1,11 @@
-// must be loaded after `select2.js`
-// must be loaded after `taxonomy.js`
-$(() => {
-    var $sel = $('.taxonomy-select'),
-        currentSelection = [];
+// Dependencies:
+// - jQuery
+// - taxonomy
+
+window.Controls = window.Controls || {};
+(function (exports) {
+    var $select = $(),
+        selection = [];
 
     function selectData() {
         return ['species', 'genuses', 'families'].map(groupData);
@@ -23,28 +26,41 @@ $(() => {
         return { text: label, children: children }
     }
 
-    function onChange() {;
+    function init() {
+        $select = $('.taxonomy-select');
+
+        return Taxonomy.init().then(() => {
+            $select.select2({
+                placeholder: 'Select family/genus/species',
+                data: selectData('.taxonomy-select'),
+            });
+
+            $select.change(changed);
+        });
+    }
+
+    function changed() {
         // deselect all nodes to start
         Taxonomy.root.deselect();
+
         // get selected type__id keys
-        $(this).val()
+        selection = $select.val()
             // split keys
             .map(val => val.split('__'))
             // collect nodes from taxonomy
-            .map(type_id => Taxonomy[type_id[0]][type_id[1]])
-            // select nodes
-            .forEach(n => n.select());
+            .map(type_id => Taxonomy[type_id[0]][type_id[1]]);
 
-        // TODO: This is not ideal, the tree should be listening for a change
-        // redraw tree
-        draw_tree();
+        // select nodes
+        selection.forEach(n => n.select());
+        console.info('Selection includes %d species', selection.length);
     }
 
-    Taxonomy.init(root => {
-        $sel.select2({
-            placeholder: 'Select family/genus/species',
-            data: selectData('.taxonomy-select'),
-        });
-        $sel.change(onChange);
-    });
-})
+    function onChange(callback) {
+        $select.change(() => callback(selection));
+    }
+
+    function get() { return selection; }
+
+
+    Object.assign(exports, { init, onChange, get })
+}(window.Controls.SelectTaxonomy = window.Controls.SelectTaxonomy || {}));
