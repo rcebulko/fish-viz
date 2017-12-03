@@ -11,7 +11,7 @@
 
 
     function init() {
-        console.debug('Initializing taxonomy');
+        console.info('Initializing taxonomy');
 
         if (initPromise === null) {
             initPromise = API.fetchSpecies().then(data => {

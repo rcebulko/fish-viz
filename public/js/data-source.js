@@ -53,6 +53,8 @@
     }
 
     function init() {
+        console.info('Initializing data source');
+
         Controls.onChange(() => getSamples().then(executeCallbacks));
         Viz.TaxonomyTree.onToggled(() => getSamples().then(executeCallbacks))
     }

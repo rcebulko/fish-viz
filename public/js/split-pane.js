@@ -4,6 +4,8 @@
 
 (function (exports) {
     function init() {
+        console.info('Initializing split panels');
+
         $('.split-pane').splitPane();
         $('.outer-pane').splitPane('firstComponentSize', 150);
         $('.nested-pane').splitPane('firstComponentSize', 250);
