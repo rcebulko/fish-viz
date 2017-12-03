@@ -1,43 +1,3 @@
-circle {
-    stroke: #05668D;
-    fill: white;
-    opacity: 0.6;
-    stroke-width: 2px;
-}
-
-circle.taxa.infilter {
-    stroke: red;
-}
-
-circle.taxa.selected {
-    stroke:red;
-}
-
-div.stations {
-    /* background-color: black; */
-}
-
-.stations, .stations svg {
-    position: absolute;
-}
-
-/* .stations svg { */
-/*     width: 60px; */
-/*     height: 60px; */
-/*     padding-right: 100px; */
-/*     font: 10px sans-serif; */
-/* } */
-
-.stations circle {
-    fill: red;
-    stroke: black;
-    stroke-width: 1.5px;
-}
-
-.stations circle.focus {
-    fill: blue;
-}
-
 path {
     fill: none;
     stroke: #05668D;
@@ -230,4 +190,9 @@ body {
 .control-panel-show > img {
     width: 100%;
     height: 100%;
+}
+
+/* map view */
+.map-overlay, .map-overlay svg {
+    position: absolute;
 }

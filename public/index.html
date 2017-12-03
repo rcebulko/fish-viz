@@ -50,7 +50,7 @@
                                     <select class="geo-region">
                                         <option value="FLA KEYS">Florida Keys</option>
                                         <option value="DRY TORT">Dry Tortugas</option>
-                                        <option value="SEFCRI">Southeast Florida Coral Reef</option>
+                                        <option value="SEFCRI" selected="selected">Southeast Florida Coral Reef</option>
                                     </select>
                                 </label>
 
@@ -97,6 +97,8 @@
 
 
         <!-- Visualizations -->
+        <script src="js/viz/viz.js"></script>
+        <script src="js/viz/map.js"></script>
         <script src="js/viz/taxonomy-tree.js"></script>
 
         <script type="text/javascript">
@@ -109,16 +111,7 @@
             });
         </script>
 
-        <!-- Dispatch and custom events -->
-        <!-- <script src="dispatch.js"></script> -->
-        <!-- Filter Manager -->
-        <!-- <script src="filtermanager.js"></script> -->
-        <!-- <script src="timewarp.js"></script> -->
-        <!-- <script src="kernels.js"></script> -->
-
-        <!-- Geographic View -->
-        <!-- <script src="geo_sel.js"></script> -->
-        <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&libraries=drawing&callback=initMap"></script> -->
-
+        <!-- Google Maps -->
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&libraries=drawing&callback=Viz.Map.mapLoaded"></script>
     </body>
 </html>
