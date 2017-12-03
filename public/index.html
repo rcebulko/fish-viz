@@ -6,18 +6,20 @@
         <!-- App styles -->
         <link rel="stylesheet" href="styles.css">
         <link rel="stylesheet" href="third-party/split-pane.css">
+        <link rel="stylesheet" href="third-party/d3-tip.css">
         <!-- noUiSlider -->
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.css">
         <!-- Select2 -->
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/css/select2.min.css">
 
     </head>
+
     <body>
         <!-- Wrapper for horizontal divider & resizing -->
         <div class="split-pane fixed-bottom outer-pane">
             <!-- Taxonomy hierarchy view -->
             <div class="taxatree-wrapper split-pane-component">
-                <svg id="taxatree" class="full-width full-height"></svg>
+                <svg class="taxonomy-tree full-width full-height"></svg>
             </div>
 
             <div class="split-pane-divider horizontal"></div>
@@ -27,7 +29,6 @@
                 <div class="split-pane fixed-left nested-pane">
                     <!-- Filters view -->
                     <div class="filters-wrapper split-pane-component full-height">
-                        <select class='taxonomy-select' multiple="multiple"></select>
                         <div id="filters" class='filters'></div>
                     </div>
 
@@ -46,18 +47,16 @@
                             <div class="control-panel-controls">
                                 <label class="control-label">
                                     Region:
-                                    <select class="geo region" onchange="select_region_onchange()"></select>
-                                </label>
-                                <br>
-                                <label class="control-label">Kernel:
-                                    <select class="filter kernel" onchange="select_kernel_onchange()">
-                                        <!-- TODO get these dynamically from Kernels object -->
-                                        <option value="uniform">Uniform</option>
-                                        <option value="triangular">Triangular</option>
-                                        <option value="triweight">Triweight</option>
-                                        <option value="epanechikov">Epanechikov</option>
+                                    <select class="geo-region">
+                                        <option value="FLA KEYS">Florida Keys</option>
+                                        <option value="DRY TORT">Dry Tortugas</option>
+                                        <option value="SEFCRI">Southeast Florida Coral Reef</option>
                                     </select>
                                 </label>
+
+                                <br>
+
+                                <select class='taxonomy-select' multiple="multiple"></select>
                             </div>
 
                             <div class="control-panel-hide">(hide)</div>
@@ -72,62 +71,52 @@
 
         <!-- jQuery -->
         <script src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
+        <!-- Color Scheme -->
+        <script src="//cdnjs.cloudflare.com/ajax/libs/color-scheme/1.0.0/color-scheme.min.js"></script>
         <!-- D3 + extensions -->
         <script src="//d3js.org/d3.v4.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-request/1.0.6/d3-request.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-dispatch/1.0.3/d3-dispatch.min.js"></script>
-
-        <!-- Core classes -->
-        <script src="api.js"></script>
-        <script src="taxonomy.js"></script>
-        <script src="controls.js"></script>
-
+        <script src="//cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
         <!-- noUiSlider -->
         <script src="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.js"></script>
-        <!-- Date range slider -->
-        <script src="date-range.js"></script>
-
         <!-- Select2 -->
         <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.min.js"></script>
-        <!-- Taxonomy selection component -->
-        <script src="taxonomy-select.js"></script>
-
         <!-- Resizeable panels -->
         <script src="third-party/split-pane.js"></script>
+
+        <!-- Core modules -->
+        <script src="js/api.js"></script>
+        <script src="js/taxonomy.js"></script>
+        <script src="js/data-source.js"></script>
+        <script src="js/split-pane.js"></script>
+
+        <!-- Control modules -->
+        <script src="js/controls/controls.js"></script>
+        <script src="js/controls/date-range.js"></script>
+        <script src="js/controls/region.js"></script>
+        <script src="js/controls/select-taxonomy.js"></script>
+
+        <!-- Visualizations -->
+        <script src="js/viz/taxonomy-tree.js"></script>
+
         <script type="text/javascript">
             $(function () {
-                $('.split-pane').splitPane();
-                $('.outer-pane').splitPane('firstComponentSize', 150);
-                $('.nested-pane').splitPane('firstComponentSize', 250);
+                Taxonomy.init()
+                    .then(Controls.init)
+                    .then(SplitPane.init)
+                    .then(Viz.TaxonomyTree.init);
             });
         </script>
 
         <!-- Dispatch and custom events -->
-        <script src="dispatch.js"></script>
+        <!-- <script src="dispatch.js"></script> -->
         <!-- Filter Manager -->
-        <script src="filtermanager.js"></script>
-        <script src="timewarp.js"></script>
-        <script src="kernels.js"></script>
-
-        <!-- Taxonomy View -->
-        <script src="taxa.js"></script>
-        <script src="taxatree3.js"></script>
-
-        <!-- <script src="taxatree_sel.js"></script> -->
-        <!-- <script src="taxatree.js"></script> -->
-        <!-- <script src="taxatree2.js"></script> -->
+        <!-- <script src="filtermanager.js"></script> -->
+        <!-- <script src="timewarp.js"></script> -->
+        <!-- <script src="kernels.js"></script> -->
 
         <!-- Geographic View -->
-        <!-- <script src="geo.js"></script> -->
-        <!-- <script src="geo2.js"></script> -->
-        <!-- <script src="geo3.js"></script> -->
-        <script src="geo_sel.js"></script>
-        <!-- <script src="geo_sel_markers.js"></script> -->
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&libraries=drawing&callback=initMap"></script>
-
-        <!-- <script src="geo_heatmap.js"></script> -->
-        <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&libraries=visualization&callback=initMap"></script> -->
+        <!-- <script src="geo_sel.js"></script> -->
+        <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&libraries=drawing&callback=initMap"></script> -->
 
     </body>
 </html>

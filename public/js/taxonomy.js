@@ -75,9 +75,9 @@
     Species.prototype.select = function (state, noUpdateParent) {
         if (typeof state === 'undefined') { state = true; }
         this._selected = state;
-        this.enable(state, noUpdateParent);
 
         if (!noUpdateParent) { this.parent().updateSelected(); }
+        this.enable(state, noUpdateParent);
     };
     Species.prototype.deselect = function () { this.select(false); };
     Species.prototype.isEnabled = function () { return this._enabled; };
@@ -153,11 +153,12 @@
         if (typeof state === 'undefined') { state = true; }
         this._selected = state;
         this.children().forEach(c => c.select(state, true));
-        this.enable(state, noUpdateParent);
 
         if (this.parent() && !noUpdateParent) {
             this.parent().updateSelected();
         }
+
+        this.enable(state, noUpdateParent);
     };
     Genus.prototype.enable = function (state, noUpdateParent) {
         if (typeof state === 'undefined') { state = true; }
@@ -169,6 +170,7 @@
         }
     };
     Genus.prototype.updateSelected = function () {
+        console.log('Update enabled', this)
         this._selected = this.children().some(c => c.isSelected());
 
         if (this.parent()) {
@@ -178,6 +180,7 @@
     Genus.prototype.updateEnabled = function () {
         this._enabled = this.children()
             .some(c => c.isSelected() && c.isEnabled());
+        console.log(this, this._enabled, this.children().map(c => c.isSelected() && c.isEnabled()))
 
         if (this.parent()) {
             this.parent().updateEnabled();
