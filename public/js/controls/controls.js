@@ -25,12 +25,14 @@
 
         Controls.Region.onChange(changed);
         Controls.DateRange.onChange(changed);
+        Controls.SelectTaxonomy.onChange(changed);
     }
 
     function get() {
         return {
             region: Controls.Region.get(),
-            dateRange: Controls.DateRange.get()
+            dateRange: Controls.DateRange.get(),
+            taxonomy: Controls.SelectTaxonomy.get(),
         }
     }
 

@@ -2,8 +2,11 @@
 // - taxonomy
 // - api
 // - controls
+// - taxonomy-tree
 
 (function (exports) {
+    var callbacks = [];
+
     function preprocess(sample, species) {
         sample.date = new Date(sample.date);
         sample.species = species;
@@ -21,16 +24,19 @@
                 samples.length, species.id(), region,
                 fmt(dateRange[0]), fmt(dateRange[1]));
 
-            return samples.map(preprocess, species);
+            return samples.map(s => preprocess(s, species));
         });
     }
 
     function getSamples() {
         var region = Controls.Region.get(),
-            dateRange = Controls.DateRange.get();
+            dateRange = Controls.DateRange.get(),
+            species = Controls.SelectTaxonomy.get()
+                .map(n => n.allSpecies())
+                .reduce((acc, arr) => acc.concat(arr));
 
         return Promise.all(
-            Object.values(Taxonomy.species)
+            species
                 .filter(s => s.isEnabled())
                 .map(s => getSpeciesSamples(s, region, dateRange)))
             .then(sampleSets => {
@@ -38,6 +44,20 @@
             })
     }
 
+    function onChange(callback) {
+        callbacks.push(callback);
+    }
 
-    Object.assign(exports, { getSamples });
+    function executeCallbacks(samples) {
+        callbacks.forEach(cb => cb(samples));
+    }
+
+    function init() {
+        Controls.onChange(() => getSamples().then(executeCallbacks));
+        Viz.TaxonomyTree.onToggled(() => getSamples().then(executeCallbacks))
+    }
+
+
+    Object.assign(exports, { getSamples, onChange, init });
 }(window.DataSource = window.DataSource || {}));
+DataSource.onChange(console.log)

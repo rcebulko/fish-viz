@@ -86,14 +86,15 @@
         <!-- Core modules -->
         <script src="js/api.js"></script>
         <script src="js/taxonomy.js"></script>
-        <script src="js/data-source.js"></script>
         <script src="js/split-pane.js"></script>
+        <script src="js/data-source.js"></script>
 
         <!-- Control modules -->
         <script src="js/controls/controls.js"></script>
         <script src="js/controls/date-range.js"></script>
         <script src="js/controls/region.js"></script>
         <script src="js/controls/select-taxonomy.js"></script>
+
 
         <!-- Visualizations -->
         <script src="js/viz/taxonomy-tree.js"></script>
@@ -102,6 +103,7 @@
             $(function () {
                 Taxonomy.init()
                     .then(Controls.init)
+                    .then(DataSource.init)
                     .then(SplitPane.init)
                     .then(Viz.TaxonomyTree.init);
             });

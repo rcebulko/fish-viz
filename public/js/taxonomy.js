@@ -134,6 +134,9 @@
     Species.prototype.colorize = function (color) {
         this.color = color;
     }
+    Species.prototype.allSpecies = function () {
+        return [this];
+    }
 
 
     /////////////////
@@ -232,6 +235,11 @@
         for (i = 0; i < children.length; ++i) {
             children[i].colorize(colors[(i + 1) % colors.length])
         }
+    }
+    Genus.prototype.allSpecies = function () {
+        return this.children()
+            .map(c => c.allSpecies())
+            .reduce((acc, arr) => acc.concat(arr))
     }
 
 

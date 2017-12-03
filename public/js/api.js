@@ -14,7 +14,9 @@
     function fetchSamples(filterOpts) {
         return $.get(API_PATH + 'sample',
             Object.assign({ limit: 100 }, filterOpts),
-        );
+        ).then(samples => {
+            return samples.length ? samples : []
+        });
     }
 
     function fetchSpeciesSamples(speciesCode, filterOpts, callback) {
