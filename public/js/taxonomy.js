@@ -42,7 +42,7 @@
     }
 
     function cullEnabled() {
-        enabled = enabled.slice(-enabledLimit);
+        enabled.slice(0, -5).forEach(s => s.disable());
     }
 
 
@@ -89,19 +89,18 @@
     Species.prototype.isEnabled = function () { return this._enabled; };
     Species.prototype.enable = function (state, noUpdateParent) {
         if (typeof state === 'undefined') { state = true; }
+        state = state && this.isSelected();
         this._enabled = state;
 
         if (!noUpdateParent) { this.parent().updateEnabled(); }
 
-        if (!state) {
+        if (!this._enabled) {
             enabled = enabled.filter(s => s !== this);
         } else if (enabled.indexOf(this) === -1) {
             enabled.push(this);
         }
 
-        if (enabled.length > enabledLimit) {
-            enabled[0].disable();
-        }
+        // cullEnabled();
     };
     Species.prototype.disable = function () { this.enable(false); };
     Species.prototype.toggle = function () { this.enable(!this.isEnabled()); };
@@ -328,6 +327,7 @@
         families: Family.prototype.instances,
         cullEnabled,
         root,
-        init
+        init,
+        enabled
     });
 }(window.Taxonomy = window.Taxonomy || {}));
