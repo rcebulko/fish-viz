@@ -1,9 +1,11 @@
 // Dependencies:
+// - Color Scheme
 // - api
 
 (function (exports) {
     var root,
-        initPromise = null;
+        initPromise = null,
+        scheme = new ColorScheme;
 
 
     function init() {
@@ -12,11 +14,29 @@
         if (initPromise === null) {
             initPromise = API.fetchSpecies().then(data => {
                 data.forEach(s => new Species(s));
+                root.colorize();
+
                 return root;
             });
         }
 
         return initPromise;
+    }
+
+    function pickColors(seed) {
+        var colors = seed.distance(0.4)
+            .scheme('analogic')
+            .variation('pastel')
+            .colors();
+
+        // remove the light colors (2, 6, and 10) and any pure grays
+        return colors
+            .slice(0, 2)
+            .concat(colors.slice(3, 6))
+            .concat(colors.slice(7, 10))
+            .filter(c => !(
+                c.slice(0, 2) === c.slice(2, 4) &&
+                c.slice(2, 4) === c.slice(4, 6)) );
     }
 
 
@@ -47,7 +67,7 @@
         this._selected = this._enabled = false;
     };
     Species.prototype.toString = function () {
-        return this._scientificName + ' (' + this._commonName + ')';
+        return this._commonName + ' (' + this._scientificName + ')';
     };
     Species.prototype.id = function () { return this._code; };
     Species.prototype.parent = function () { return this.genus(); };
@@ -94,6 +114,12 @@
         return this.infoLines()
             .map(lbl_val => '<b>' + lbl_val.join('</b>: '))
             .join('<br>');
+    }
+    Species.prototype.colorize = function (color) {
+        this._color = color;
+    }
+    Species.prototype.color = function () {
+        return this.isEnabled() ? this._color : '#666'
     }
 
 
@@ -150,7 +176,8 @@
         }
     }
     Genus.prototype.updateEnabled = function () {
-        this._enabled = this.children().some(c => c.isEnabled());
+        this._enabled = this.children()
+            .some(c => c.isSelected() && c.isEnabled());
 
         if (this.parent()) {
             this.parent().updateEnabled();
@@ -180,6 +207,17 @@
             ['Family', this._familyName],
             ['Species', this.children().length],
         ];
+    }
+    Genus.prototype.colorize = function (color) {
+        var colors = pickColors(scheme.from_hex(color)),
+            children = this.children(),
+            i;
+
+        this._color = color;
+
+        for (i = 0; i < children.length; ++i) {
+            children[i].colorize(colors[(i + 1) % colors.length])
+        }
     }
 
 
@@ -214,6 +252,17 @@
             ['Genuses', this.children().length],
         ];
     }
+    Family.prototype.colorize = function (hue) {
+        var colors = pickColors(scheme.from_hue(hue)),
+            children = this.children(),
+            i;
+
+        this._color = colors[0];
+
+        for (i = 0; i < children.length; ++i) {
+            children[i].colorize(colors[(i + 1) % colors.length])
+        }
+    }
 
 
     ////////////////
@@ -236,6 +285,17 @@
     Root.prototype.id = () => 'Root';
     Root.prototype.parent = () => null;
     Root.prototype.html = () => '<b>Root</b>'
+    Root.prototype.colorize = function () {
+        var children = this.children(),
+            stagger = children.length % 3 === 0 ? 4 : 3,
+            i;
+
+        this._color = '#CCC';
+
+        for (i = 0; i < children.length; ++i) {
+            children[(i * stagger) % children.length].colorize((i * 3) % 255);
+        }
+    }
 
 
     root = new Root();
