@@ -18,41 +18,106 @@ window.Viz = window.Viz || {};
         },
     },
 
-    initReady = false,
-    googleReady = false,
+    // let GMap resolve the promise as a callback
+    mapLoaded = null,
+    googlePromise = new Promise((resolve, reject) => { mapLoaded = resolve; }),
 
-    map, bounds, center, overlay;
+    tip = d3.tip().attr('class', 'd3-tip')
+        .direction('n')
+        .html(sample => {
+            return [
+                '<b>Sample</b>',
+                [
+                    ['Date', Controls.DateRange.formatTimestamp(sample.date)],
+                    ['Latitude', sample.latitude],
+                    ['Longitude', sample.longitude],
+                    ['Depth', sample.depth],
+                    ['Length', sample.length],
+                    ['Number', sample.number],
+                    ['Protected', sample.protected ? 'Yes' : 'No'],
+                ].map(lbl_val => '<b>' + lbl_val.join('</b>: ')).join('<br>'),
+                sample.species.html(),
+            ].join('<br><br>')
+        }),
+
+    map, bounds, overlay;
+
 
     function init() {
-        initReady = true;
-        tryInit();
+        googlePromise.then(() => {
+            console.info('Initializing map visualization');
+
+            map = new google.maps.Map(d3.select('#map').node(), {
+                zoom: 9,
+                mapTypeId: 'terrain',
+                disableDefaultUI: true,
+                zoomControl: true,
+                scaleControl: true,
+                minZoom: 8,
+                maxZoom: 14,
+            });
+            center = map.getCenter();
+
+            initBounds();
+            initOverlay();
+            initPan();
+            initZoom();
+
+            DataSource.onChange(drawSamples);
+            draw();
+        });
     }
 
-    function mapLoaded() {
-        googleReady = true;
 
-        initBounds();
-        initOverlay();
-        tryInit();
-    }
-
-    function tryInit() {
-        if (!googleReady || !initReady) return;
-        console.info('Initializing map visualization');
-
-        map = new google.maps.Map(d3.select('#map').node(), {
-            zoom: 9,
-            mapTypeId: 'terrain',
-            disableDefaultUI: true,
-            zoomControl: true,
-            scaleControl: true,
-            minZoom: 8,
-            maxZoom: 14,
+    function initBounds() {
+        Object.keys(regionBounds).forEach(function (region) {
+            var rb = regionBounds[region],
+                bounds = new google.maps.LatLngBounds();
+            bounds.extend(new google.maps.LatLng(rb.lat[0], rb.lon[0]));
+            bounds.extend(new google.maps.LatLng(rb.lat[1], rb.lon[1]));
+            regionBounds[region] = bounds;
         });
 
         fitRegion(Controls.Region.get());
-        center = map.getCenter();
-        overlay = new SVGOverlay(map)
+    }
+
+    function initOverlay() {
+        // SVG GMap Overlay
+        function SVGOverlay(map) {
+            this.setMap(map);
+            this.overlay = d3.select();
+        }
+
+        SVGOverlay.prototype = new google.maps.OverlayView();
+
+        SVGOverlay.prototype.onAdd = function() {
+            var div = document.createElement('div');
+            this.getPanes().overlayMouseTarget.appendChild(div);
+            this.overlay = d3.select(div).attr('class', 'map-overlay');
+        }
+
+        SVGOverlay.prototype.draw = function() {
+            this.children().each(transformSample);
+        };
+
+        SVGOverlay.prototype.children = function() {
+            return this.overlay.selectAll('svg');
+        };
+
+        function transformSample (d) {
+            var proj = overlay.getProjection().fromLatLngToDivPixel(
+                new google.maps.LatLng(+d.latitude, +d.longitude))
+
+            return d3.select(this)
+                .style('left', proj.x + 'px')
+                .style('top', proj.y + 'px');
+        }
+
+        overlay = new SVGOverlay(map);
+    }
+
+    function initPan() {
+        var center = map.getCenter();
 
         google.maps.event.addListener(map, 'center_changed', function() {
             var newCenter = map.getCenter();
@@ -70,23 +135,29 @@ window.Viz = window.Viz || {};
                 map.panTo(center);
             }
         });
-
-        google.maps.event.addListener(map, 'bounds_changed', draw);
-        DataSource.onChange(drawSamples);
-        draw();
     }
+
+    function initZoom() {
+        google.maps.event.addListener(map, 'bounds_changed', () =>  overlay.draw());
+    }
+
 
     function draw() {
         DataSource.getSamples().then(drawSamples);
     }
 
     function drawSamples(samples) {
-        var nodes = overlay.children().data(samples, d => d.id)
-            newNodes = nodes.enter().append('svg');
+        var nodes = overlay.children().data(samples, d => d.id),
+            newNodes = nodes.enter().append('svg').attr('class', 'sample');
 
         nodes.exit().remove();
+        overlay.draw();
 
-        newNodes.merge(nodes).each(transformSample);
+        // initialize d3-tip on each marker SVG
+        newNodes.selectAll('svg')
+            ._parents
+            .map(d3.select)
+            .forEach(vis => vis.call(tip));
 
         newNodes
             .attr('class', 'marker')
@@ -94,63 +165,14 @@ window.Viz = window.Viz || {};
                 .attr('fill', d => '#' + d.species.color)
                 .attr('stroke', '#000')
                 .attr('stroke-width', 1)
-                .attr('r', d => d.length / 1.5)
-                // .on('mouseover', function(d) {
-                //     dispatch.call('geo_datum_focus', null, d);
-                // })
-                // .on('mouseout', function(d) {
-                //     dispatch.call('geo_datum_unfocus', null, d);
-                // });
-    }
-
-    function initBounds() {
-        Object.keys(regionBounds).forEach(function (region) {
-            var rb = regionBounds[region],
-                bounds = new google.maps.LatLngBounds();
-            bounds.extend(new google.maps.LatLng(rb.lat[0], rb.lon[0]));
-            bounds.extend(new google.maps.LatLng(rb.lat[1], rb.lon[1]));
-            regionBounds[region] = bounds;
-        });
+                .attr('r', d => Math.log2(2 + d.number) * 2)
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide)
     }
 
     function fitRegion(region) {
         bounds = regionBounds[region];
         map.fitBounds(bounds);
-    }
-
-
-    function initOverlay() {
-        SVGOverlay.prototype = new google.maps.OverlayView();
-
-        SVGOverlay.prototype.onAdd = function() {
-            var div = document.createElement('div');
-            this.getPanes().overlayMouseTarget.appendChild(div);
-            this.overlay = d3.select(div).attr('class', 'map-overlay');
-        }
-
-        SVGOverlay.prototype.draw = function() {
-            this.children().each(transformSample);
-            draw();
-        };
-
-        SVGOverlay.prototype.children = function() {
-            return this.overlay.selectAll('svg');
-        };
-
-    }
-    // SVG GMAP Overlay
-    function SVGOverlay(map) {
-        this.setMap(map);
-        this.overlay = d3.select();
-    }
-    function transformSample (d) {
-        var proj = overlay.getProjection().fromLatLngToDivPixel(
-            new google.maps.LatLng(+d.latitude, +d.longitude))
-
-        return d3.select(this)
-            .style('left', proj.x + 'px')
-            .style('top', proj.y + 'px')
-            .style('position', 'absolute');
     }
 
 
