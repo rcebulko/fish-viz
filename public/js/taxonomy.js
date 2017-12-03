@@ -11,9 +11,9 @@
 
 
     function init() {
-        console.info('Initializing taxonomy');
-
         if (initPromise === null) {
+            console.info('Initializing taxonomy');
+
             initPromise = API.fetchSpecies().then(data => {
                 data.forEach(s => new Species(s));
                 root.colorize();
