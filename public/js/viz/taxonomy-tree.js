@@ -13,7 +13,11 @@ window.Viz = window.Viz || {};
         width = 0,
         height = 0,
 
-        fillColor = d => d.data.isEnabled() ? color(d.data.id()) : '#333';
+        fillColor = d => d.data.isEnabled() ? color(d.data.id()) : '#333',
+
+        tip = d3.tip().attr('class', 'd3-tip')
+            .html(d => d.data.html())
+            .direction('s');
 
 
     function init() {
@@ -27,28 +31,6 @@ window.Viz = window.Viz || {};
         Controls.SelectTaxonomy.onChange(draw);
         draw();
     }
-
-    // dispatch.on('taxa_mouseover.taxatree', function(d) {
-    //     tip_taxa
-    //         .html(d.data.id())
-    //         .transition()
-    //             .duration(200)
-    //             .style('opacity', .9);
-    //     dispatch.call('taxa_mousemove', null, d);
-    // });
-
-    // dispatch.on('taxa_mousemove.taxatree', function(d) {
-    //     tip_taxa
-    //         .style('left', d3.event.pageX + 'px')
-    //         .style('top', (d3.event.pageY-32) + 'px')
-    // });
-
-    // dispatch.on('taxa_mouseout.taxatree', function() {
-    //     tip_taxa
-    //         .transition()
-    //             .duration(500)
-    //             .style('opacity', 0);
-    // });
 
     function draw() {
         var tree = d3.hierarchy(Taxonomy.root, d => {
@@ -68,6 +50,8 @@ window.Viz = window.Viz || {};
             xf,
 
             nodes, rects;
+
+        viz.call(tip);
 
         tree.count();
         tree.sort((a,b) => a.data.id().localeCompare(b.data.id()));
@@ -93,25 +77,9 @@ window.Viz = window.Viz || {};
                 .style('fill', fillColor)
                 .style('stroke-width', 2)
                 .style('stroke', '#000')
-                // .on('mouseover', function(d) {
-
-                //     dispatch.call('taxa_mouseover', null, d);
-                // })
-                // .on('mousemove', function(d) {
-                //     dispatch.call('taxa_mousemove', null, d);
-                // })
-                // .on('mouseout', function(d) {
-                //     dispatch.call('taxa_mouseout', null, d);
-                // })
-                .on('click', function(d) {
-                    d.data.toggle();
-                    console.log(
-                        (d.data.isEnabled() ? 'En' : 'Dis') +
-                        'abled ' +
-                        d.data)
-
-                    $(document).trigger('taxonomy_change.toggled', d.data);
-                })
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide)
+                .on('click', toggle)
             .merge(rects)
                 .transition()
                     .duration(transitionDuration)
@@ -119,6 +87,16 @@ window.Viz = window.Viz || {};
                     .attr('y', d => y(d.y0) + '%')
                     .attr('width', d => (x(d.x1) - x(d.x0)) + '%')
                     .attr('height', d => (y(1) - y(d.y0)) + '%');
+    }
+
+    function toggle(d) {
+        d.data.toggle();
+        console.log(
+            (d.data.isEnabled() ? 'En' : 'Dis') +
+            'abled ' +
+            d.data)
+
+        $(document).trigger('taxonomy_change.toggled', d.data);
     }
 
     function onToggled(callback) {

@@ -82,6 +82,19 @@
 
         return this._genus;
     };
+    Species.prototype.infoLines = function () {
+        return [
+            ['Species', this._scientificName],
+            ['Common name', this._commonName],
+            ['Genus', this._genusName],
+            ['Family', this._familyName],
+        ];
+    }
+    Species.prototype.html = function () {
+        return this.infoLines()
+            .map(lbl_val => '<b>' + lbl_val.join('</b>: '))
+            .join('<br>');
+    }
 
 
     /////////////////
@@ -161,6 +174,13 @@
     Genus.prototype.addChild = function (child) {
         this._children[child.id()] = child;
     }
+    Genus.prototype.infoLines = function () {
+        return [
+            ['Genus', this._genusName],
+            ['Family', this._familyName],
+            ['Species', this.children().length],
+        ];
+    }
 
 
     //////////////////
@@ -188,6 +208,12 @@
     }
     Family.prototype.id = function () { return this._familyName; };
     Family.prototype.parent = () => root;
+    Family.prototype.infoLines = function () {
+        return [
+            ['Family', this._familyName],
+            ['Genuses', this.children().length],
+        ];
+    }
 
 
     ////////////////
@@ -209,6 +235,7 @@
     }
     Root.prototype.id = () => 'Root';
     Root.prototype.parent = () => null;
+    Root.prototype.html = () => '<b>Root</b>'
 
 
     root = new Root();
