@@ -43,9 +43,6 @@ path {
     overflow: visible;
 }
 
-select.taxa {
-    height: 20cm;
-}
 
 
 
@@ -189,6 +186,12 @@ body {
 .control-panel-toggle > img {
     width: 100%;
     height: 100%;
+}
+
+.species-color-block {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
 }
 
 /* map view */

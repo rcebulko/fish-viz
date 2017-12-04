@@ -8,7 +8,23 @@ window.Controls = window.Controls || {};
     var $select = $(),
         selection = [];
 
+
     function init() {
+        var colorBlock = color => {
+                return '<span style="background-color: ' +
+                    color +
+                    '" class="species-color-block"></span>';
+            },
+
+            wrapNodeFmt = nodeFmt => {
+                return object => (object.id ?
+                    nodeFmt(Taxonomy.fromKey(object.id)) :
+                    object.text);
+            },
+
+            addColorBlock = nodeFmt => wrapNodeFmt(
+                node => colorBlock(node.color) + ' ' + nodeFmt(node));
+
         console.info('Initializing taxonomy selection control');
 
         $select = $('.taxonomy-select');
@@ -17,6 +33,10 @@ window.Controls = window.Controls || {};
             $select.select2({
                 placeholder: 'Select family/genus/species',
                 data: selectData(),
+                closeOnSelect: false,
+                escapeMarkup: m => m,
+                templateResult: addColorBlock(node => node.name()),
+                templateSelection: addColorBlock(node => node.toString()),
             });
 
             onChange(changed);

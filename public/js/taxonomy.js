@@ -78,8 +78,10 @@
         this.parent().addChild(this);
         this._selected = this._enabled = this._focused = false;
     };
+    Species.prototype.name = function () { return this._commonName; }
+    Species.prototype.extraInfo = function () { return this._scientificName; }
     Species.prototype.toString = function () {
-        return this._commonName + ' (' + this._scientificName + ')';
+        return this.name() + ' (' + this.extraInfo() + ')';
     };
     Species.prototype.id = function () { return this._code; };
     Species.prototype.key = function () { return this._type + '__' + this.id(); }
@@ -170,10 +172,11 @@
     Genus.prototype.instances = {};
 
     // Instance methods
-    Genus.prototype.toString = function () {
-        return this.id() + ' (' + this.children().length + ' species)';
-    };
-    Genus.prototype.id = function () { return this._genusName; };
+    Genus.prototype.name = function () { return this._genusName; }
+    Genus.prototype.extraInfo = function () {
+        return this.children().length + ' species';
+    }
+    Genus.prototype.id = function () { return this.name(); };
     Genus.prototype.parent = function () { return this.family(); };
     Genus.prototype.select = function (state, noUpdateParent) {
         if (typeof state === 'undefined') { state = true; }
@@ -266,7 +269,7 @@
         if (familyName) {
             this._familyName = familyName;
             this._children   = {};
-            this._type       = 'species';
+            this._type       = 'families';
 
             this.init();
         }
@@ -279,10 +282,10 @@
     Family.prototype.instances = {};
 
     // Instance methods
-    Family.prototype.toString = function () {
-        return this.id() + ' (' + this.children().length + ' genuses)';
+    Family.prototype.name = function () { return this._familyName; }
+    Family.prototype.extraInfo = function () {
+        return this.children().length + ' genuses';
     }
-    Family.prototype.id = function () { return this._familyName; };
     Family.prototype.parent = () => root;
     Family.prototype.infoLines = function () {
         return [
