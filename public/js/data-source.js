@@ -20,7 +20,7 @@
             region,
             date: { gt: dateRange[0], lt: dateRange[1] }
         }).then(samples => {
-            console.log('Fetched %d samples for %s in %s from %s to %s',
+            console.debug('Fetched %d samples for %s in %s from %s to %s',
                 samples.length, species.id(), region,
                 fmt(dateRange[0]), fmt(dateRange[1]));
 
@@ -40,8 +40,11 @@
                 .filter(s => s.isEnabled())
                 .map(s => getSpeciesSamples(s, region, dateRange)))
             .then(sampleSets => {
-                return sampleSets.reduce((acc, arr) => acc.concat(arr), []);
-            })
+                samples = sampleSets.reduce((acc, arr) => acc.concat(arr), []);
+                console.debug('Collected a total of %d samples', samples.length);
+
+                return samples;
+            });
     }
 
     function onChange(callback) {
@@ -62,4 +65,3 @@
 
     Object.assign(exports, { getSamples, onChange, init });
 }(window.DataSource = window.DataSource || {}));
-DataSource.onChange(console.log)
