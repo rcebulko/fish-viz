@@ -134,7 +134,7 @@
             .join('<br>');
     };
     Species.prototype.colorize = function (color) {
-        this.color = color;
+        this.color = '#' + color;
     };
     Species.prototype.allSpecies = function () {
         return [this];
@@ -237,7 +237,7 @@
             children = this.children(),
             i;
 
-        this.color = color;
+        this.color = '#' + color;
 
         for (i = 0; i < children.length; ++i) {
             children[i].colorize(colors[(i + 1) % colors.length])
@@ -286,7 +286,7 @@
             children = this.children(),
             i;
 
-        this.color = colors[0];
+        this.color = '#' + colors[0];
 
         for (i = 0; i < children.length; ++i) {
             children[i].colorize(colors[(i + 1) % colors.length])
@@ -308,7 +308,6 @@
     // Instance methods
     Root.prototype.isSelected = () => true;
     Root.prototype.isEnabled = () => true;
-    Root.prototype.isFocused = () => false;
     Root.prototype.toString = function () {
         return this.id() + ' (' + this.children().length + ' families)';
     }
@@ -320,7 +319,7 @@
             stagger = children.length % 3 === 0 ? 4 : 3,
             i;
 
-        this.color = '#CCC';
+        this.color = '#cccccc';
 
         for (i = 0; i < children.length; ++i) {
             children[(i * stagger) % children.length].colorize((i * 3) % 255);

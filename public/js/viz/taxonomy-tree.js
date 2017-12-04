@@ -16,7 +16,19 @@ window.Viz = window.Viz || {};
 
         tip = d3.tip().attr('class', 'd3-tip')
             .html(d => d.data.html())
-            .direction('s');
+            .direction('s'),
+
+        styleOpacity = d => d.data.isEnabled() ? 1 : 0.25,
+        styleStroke = d => d.data.isFocused() ? '#FFF' : '#000',
+        styleStrokeWidth = d => {
+            if (!d.data.isEnabled()) {
+                return 1;
+            } else if (!d.data.isFocused()) {
+                return 2;
+            } else {
+                return 4;
+            }
+        };
 
 
     function init() {
@@ -27,8 +39,18 @@ window.Viz = window.Viz || {};
         height = +viz.attr('height');
         viz.call(tip);
 
-        onToggled(draw);
-        onFocused(draw);
+        onToggled(() => {
+            viz.selectAll('rect')
+                .style('opacity', styleOpacity)
+                .style('stroke-width', styleStrokeWidth);
+        });
+
+        onFocused(() => {
+            viz.selectAll('rect')
+                .style('stroke', styleStroke)
+                .style('stroke-width', styleStrokeWidth);
+        });
+
         Controls.SelectTaxonomy.onChange(draw);
         draw();
     }
@@ -61,24 +83,16 @@ window.Viz = window.Viz || {};
 
         rects
             .enter().append('rect')
+                .attr('fill', d => d.data.color)
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide)
                 .on('mouseover', focus)
                 .on('mouseout', unfocus)
                 .on('click', toggle)
+                .style('stroke', styleStroke)
+                .style('stroke-width', styleStrokeWidth)
+                .style('opacity', styleOpacity)
             .merge(rects)
-                .style('fill', d => d.data.color)
-                .style('opacity', d => d.data.isEnabled() ? 1 : 0.25)
-                .style('stroke-width', d => {
-                    if (!d.data.isEnabled()) {
-                        return 1;
-                    } else if (!d.data.isFocused()) {
-                        return 2;
-                    } else {
-                        return 4;
-                    }
-                })
-                .style('stroke', d => d.data.isFocused() ? '#FFF' : '#000')
                 .transition()
                     .duration(transitionDuration)
                     .attr('x', d => x(d.x0) + '%')
