@@ -10,7 +10,14 @@ window.Controls = window.Controls || {};
     function init() {
         console.info('Initializing region selection control');
 
-        $region = $('.geo-region');
+        $region = $('.geo-region').select2({
+            minimumResultsForSearch: -1,
+            data: [
+                { id: 'FLA KEYS', text: 'Florida Keys' },
+                { id: 'DRY TORT', text: 'Dry Tortugas' },
+                { id: 'SEFCRI', text: 'Southeast Florida Coral Reef' },
+            ]
+        });
 
         onChange(changed);
         set(region);

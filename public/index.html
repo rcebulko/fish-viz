@@ -44,17 +44,14 @@
                         </div>
 
                         <!-- Controls and filter settings -->
-                        <div class="control-panel hidden">
+                        <div class="control-panel">
                             <div class="control-panel-controls">
                                 <label class="control-label">
                                     Region:
-                                    <select class="geo-region">
-                                        <option value="FLA KEYS">Florida Keys</option>
-                                        <option value="DRY TORT">Dry Tortugas</option>
-                                        <option value="SEFCRI">Southeast Florida Coral Reef</option>
-                                    </select>
+                                    <select class="geo-region"></select>
                                 </label>
 
+                                <br>
                                 <br>
 
                                 <select class='taxonomy-select' multiple="multiple"></select>
@@ -106,9 +103,9 @@
         <script type="text/javascript">
             $(function () {
                 Taxonomy.init()
+                    .then(SplitPane.init)
                     .then(Controls.init)
                     .then(DataSource.init)
-                    .then(SplitPane.init)
                     .then(Viz.init);
             });
         </script>
