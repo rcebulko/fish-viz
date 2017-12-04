@@ -1,5 +1,8 @@
 // Dependencies:
 // - d3
+// - GMap
+// data-source
+// viz/taxonomy-tree
 
 window.Viz = window.Viz || {};
 (function (exports) {
@@ -29,8 +32,8 @@ window.Viz = window.Viz || {};
                 '<b>Sample</b>',
                 [
                     ['Date', Controls.DateRange.formatTimestamp(sample.date)],
-                    ['Latitude', sample.latitude],
-                    ['Longitude', sample.longitude],
+                    ['Latitude', sample.latitude.toFixed(5)],
+                    ['Longitude', sample.longitude.toFixed(5)],
                     ['Depth', sample.depth],
                     ['Length', sample.length],
                     ['Number', sample.number],
@@ -44,30 +47,36 @@ window.Viz = window.Viz || {};
 
 
     function init() {
-        googlePromise.then(() => {
-            console.info('Initializing map visualization');
+        var settings = Cookies.getJSON('map-settings') || {};
 
-            map = new google.maps.Map(d3.select('#map').node(), {
-                zoom: 9,
-                mapTypeId: 'terrain',
-                disableDefaultUI: true,
-                zoomControl: true,
-                scaleControl: true,
-                minZoom: 8,
-                maxZoom: 14,
+        return googlePromise
+            .then(() => {
+                console.info('Initializing map visualization');
+
+                map = new google.maps.Map(d3.select('#map').node(), {
+                    zoom: 9,
+                    mapTypeId: 'terrain',
+                    disableDefaultUI: true,
+                    zoomControl: true,
+                    scaleControl: true,
+                    minZoom: 8,
+                    maxZoom: 14,
+                });
+
+                initBounds();
+                initOverlay();
+                initPan();
+                initZoom();
+
+                Controls.Region.onChange(fitRegion);
+                DataSource.onChange(drawSamples);
+                Viz.TaxonomyTree.onFocused(restyle);
+            })
+            .then(draw)
+            .then(() => {
+                // needs to be async for some reason
+                setTimeout(applySettings(settings), 0);
             });
-            center = map.getCenter();
-
-            initBounds();
-            initOverlay();
-            initPan();
-            initZoom();
-
-            DataSource.onChange(drawSamples);
-            Viz.TaxonomyTree.onFocused(restyle);
-
-            draw();
-        });
     }
 
 
@@ -136,16 +145,21 @@ window.Viz = window.Viz || {};
 
                 map.panTo(center);
             }
+
+            saveSettings();
         });
     }
 
     function initZoom() {
-        google.maps.event.addListener(map, 'bounds_changed', () =>  overlay.draw());
+        google.maps.event.addListener(map, 'bounds_changed', () =>  {
+            overlay.draw();
+            saveSettings();
+        });
     }
 
 
     function draw() {
-        DataSource.getSamples().then(drawSamples);
+        return DataSource.getSamples().then(drawSamples);
     }
 
     function drawSamples(samples) {
@@ -181,6 +195,19 @@ window.Viz = window.Viz || {};
             overlay.children()
                 .style('opacity', 1)
         }
+    }
+
+    function saveSettings() {
+        Cookies.set('map-settings', {
+            center: map.getCenter(),
+            zoom: map.getZoom(),
+        });
+    }
+
+    function applySettings(settings) {
+        console.log(settings)
+        if (settings.center) { map.panTo(settings.center); }
+        if (settings.zoom) { map.setZoom(settings.zoom); }
     }
 
     function fitRegion(region) {
