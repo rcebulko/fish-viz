@@ -25,8 +25,10 @@ window.Viz = window.Viz || {};
         viz = d3.select('.taxonomy-tree').append('g');
         width = +viz.attr('width');
         height = +viz.attr('height');
+        viz.call(tip);
 
         onToggled(draw);
+        onFocused(draw);
         Controls.SelectTaxonomy.onChange(draw);
         draw();
     }
@@ -50,7 +52,6 @@ window.Viz = window.Viz || {};
 
             nodes, rects;
 
-        viz.call(tip);
 
         tree.count();
         tree.sort((a,b) => a.data.id().localeCompare(b.data.id()));
@@ -58,9 +59,33 @@ window.Viz = window.Viz || {};
         nodes = d3.partition()(tree).descendants();
         rects = viz.selectAll('rect').data(nodes, d => d.data.id());
 
-        rects.style('fill', d => d.data.color)
-            .style('opacity', d => d.data.isEnabled() ? 1 : 0.25)
-            .style('stroke-width', d => d.data.isEnabled() ? 2 : 1);
+        rects
+            .enter().append('rect')
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide)
+                .on('mouseover', focus)
+                .on('mouseout', unfocus)
+                .on('click', toggle)
+            .merge(rects)
+                .style('fill', d => d.data.color)
+                .style('opacity', d => d.data.isEnabled() ? 1 : 0.25)
+                .style('stroke-width', d => {
+                    if (!d.data.isEnabled()) {
+                        return 1;
+                    } else if (!d.data.isFocused()) {
+                        return 2;
+                    } else {
+                        return 4;
+                    }
+                })
+                .style('stroke', d => d.data.isFocused() ? '#FFF' : '#000')
+                .transition()
+                    .duration(transitionDuration)
+                    .attr('x', d => x(d.x0) + '%')
+                    .attr('y', d => y(d.y0) + '%')
+                    .attr('width', d => (x(d.x1) - x(d.x0)) + '%')
+                    .attr('height', d => (y(1) - y(d.y0)) + '%');
+
         rects.exit()
             .on('click', null)
             .each(function(d) {
@@ -72,28 +97,12 @@ window.Viz = window.Viz || {};
                 .attr('x', d => x(minX0 / (1 - maxX1 + minX0)) + '%')
                 .attr('width', '0%')
             .remove();
-
-        rects
-            .enter().append('rect')
-                .style('fill', d => d.data.color)
-                .style('opacity', d => d.data.isEnabled() ? 1 : 0.25)
-                .style('stroke-width', d => d.data.isEnabled() ? 2 : 1)
-                .style('stroke', '#000')
-                .on('mouseover', tip.show)
-                .on('mouseout', tip.hide)
-                .on('click', toggle)
-            .merge(rects)
-                .transition()
-                    .duration(transitionDuration)
-                    .attr('x', d => x(d.x0) + '%')
-                    .attr('y', d => y(d.y0) + '%')
-                    .attr('width', d => (x(d.x1) - x(d.x0)) + '%')
-                    .attr('height', d => (y(1) - y(d.y0)) + '%');
     }
 
     function toggle(d) {
         d.data.toggle();
         Taxonomy.cullEnabled();
+
         console.info(
             (d.data.isEnabled() ? 'En' : 'Dis') +
             'abled ' +
@@ -106,6 +115,18 @@ window.Viz = window.Viz || {};
         $(document).on('taxonomy_change.toggled', (evt, s) => callback(s));
     }
 
+
+    function setFocus(d, state) {
+        d.data.focus(state);
+        $(document).trigger('taxonomy_change.focused', d.data);
+    }
+
+    function focus(d) { setFocus(d, true); }
+    function unfocus(d) { setFocus(d, false); }
+
+    function onFocused(callback) {
+        $(document).on('taxonomy_change.focused', (evt, s) => callback(s));
+    }
 
     Object.assign(exports, { init, draw, onToggled })
 }(window.Viz.TaxonomyTree = window.Viz.TaxonomyTree || {}));

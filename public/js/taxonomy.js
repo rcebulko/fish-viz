@@ -70,7 +70,7 @@
     Species.prototype.init = function () {
         this.instances[this.id()] = this;
         this.parent().addChild(this);
-        this._selected = this._enabled = false;
+        this._selected = this._enabled = this._focused = false;
     };
     Species.prototype.toString = function () {
         return this._commonName + ' (' + this._scientificName + ')';
@@ -89,8 +89,7 @@
     Species.prototype.isEnabled = function () { return this._enabled; };
     Species.prototype.enable = function (state, noUpdateParent) {
         if (typeof state === 'undefined') { state = true; }
-        state = state && this.isSelected();
-        this._enabled = state;
+        this._enabled = state && this.isSelected();
 
         if (!noUpdateParent) { this.parent().updateEnabled(); }
 
@@ -99,11 +98,15 @@
         } else if (enabled.indexOf(this) === -1) {
             enabled.push(this);
         }
-
-        // cullEnabled();
     };
     Species.prototype.disable = function () { this.enable(false); };
     Species.prototype.toggle = function () { this.enable(!this.isEnabled()); };
+    Species.prototype.isFocused = function () { return this._focus; }
+    Species.prototype.focus = function (state) {
+        if (typeof state === 'undefined') { state = true; }
+        this._focus = state && this.isEnabled();
+    };
+    Species.prototype.unfocus = function () { this.focus(false); };
     Species.prototype.children = () => null;
     Species.prototype.family = function () { return this.genus().family(); };
     Species.prototype.genus = function () {
@@ -124,18 +127,18 @@
             ['Genus', this._genusName],
             ['Family', this._familyName],
         ];
-    }
+    };
     Species.prototype.html = function () {
         return this.infoLines()
             .map(lbl_val => '<b>' + lbl_val.join('</b>: '))
             .join('<br>');
-    }
+    };
     Species.prototype.colorize = function (color) {
         this.color = color;
-    }
+    };
     Species.prototype.allSpecies = function () {
         return [this];
-    }
+    };
 
 
     /////////////////
@@ -184,13 +187,18 @@
             this.parent().updateEnabled();
         }
     };
+    Genus.prototype.focus = function (state, noUpdateParent) {
+        if (typeof state === 'undefined') { state = true; }
+        this._focus = state && this.isEnabled();
+        this.children().forEach(c => c.focus(state));
+    };
     Genus.prototype.updateSelected = function () {
         this._selected = this.children().some(c => c.isSelected());
 
         if (this.parent()) {
             this.parent().updateSelected();
         }
-    }
+    };
     Genus.prototype.updateEnabled = function () {
         this._enabled = this.children()
             .some(c => c.isSelected() && c.isEnabled());
@@ -198,10 +206,10 @@
         if (this.parent()) {
             this.parent().updateEnabled();
         }
-    }
+    };
     Genus.prototype.children = function () {
         return Object.values(this._children);
-    }
+    };
     Genus.prototype.child = function (name) { return this._children[name]; };
     Genus.prototype.family = function () {
         if (typeof this._family === 'undefined') {
@@ -216,14 +224,14 @@
     };
     Genus.prototype.addChild = function (child) {
         this._children[child.id()] = child;
-    }
+    };
     Genus.prototype.infoLines = function () {
         return [
             ['Genus', this._genusName],
             ['Family', this._familyName],
             ['Species', this.children().length],
         ];
-    }
+    };
     Genus.prototype.colorize = function (color) {
         var colors = pickColors(scheme.from_hex(color), 'default'),
             children = this.children(),
@@ -234,12 +242,12 @@
         for (i = 0; i < children.length; ++i) {
             children[i].colorize(colors[(i + 1) % colors.length])
         }
-    }
+    };
     Genus.prototype.allSpecies = function () {
         return this.children()
             .map(c => c.allSpecies())
             .reduce((acc, arr) => acc.concat(arr))
-    }
+    };
 
 
     //////////////////
@@ -300,6 +308,7 @@
     // Instance methods
     Root.prototype.isSelected = () => true;
     Root.prototype.isEnabled = () => true;
+    Root.prototype.isFocused = () => false;
     Root.prototype.toString = function () {
         return this.id() + ' (' + this.children().length + ' families)';
     }
@@ -328,6 +337,5 @@
         cullEnabled,
         root,
         init,
-        enabled
     });
 }(window.Taxonomy = window.Taxonomy || {}));
