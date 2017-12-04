@@ -1,7 +1,12 @@
 // Dependencies:
 // - jQuery
+// - JS Cookie
 // - controls/date-range
+// - - noUiSlider
 // - controls/region
+// - controls/select-taxonomy
+// - - Select2
+// - - Taxonomy
 
 (function (exports) {
     function init() {
@@ -11,7 +16,9 @@
 
         Controls.DateRange.init();
         Controls.Region.init();
-        return Controls.SelectTaxonomy.init();
+        return Controls.SelectTaxonomy.init()
+            .then(loadSettings)
+            .then(() => onChange(saveSettings));
     }
 
     function enableShowHide() {
@@ -33,6 +40,27 @@
             region: Controls.Region.get(),
             dateRange: Controls.DateRange.get(),
             taxonomy: Controls.SelectTaxonomy.get(),
+        }
+    }
+
+    function saveSettings(controlName) {
+        var settings = get();
+        settings.taxonomy = settings.taxonomy.map(s => s.key())
+
+        Cookies.set('settings', settings);
+    }
+
+    function loadSettings() {
+        var loaded = Cookies.getJSON('settings') || {};
+
+        if (loaded.region) {
+            Controls.Region.set(loaded.region);
+        }
+        if (loaded.dateRange) {
+            Controls.DateRange.set(loaded.dateRange);
+        }
+        if (loaded.taxonomy) {
+            Controls.SelectTaxonomy.set(loaded.taxonomy);
         }
     }
 

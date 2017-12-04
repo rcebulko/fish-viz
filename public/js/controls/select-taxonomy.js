@@ -1,30 +1,12 @@
 // Dependencies:
 // - jQuery
+// - Select2
 // - taxonomy
 
 window.Controls = window.Controls || {};
 (function (exports) {
     var $select = $(),
         selection = [];
-
-    function selectData() {
-        return ['species', 'genuses', 'families'].map(groupData);
-    }
-
-    function groupData(type) {
-        var label = type[0].toUpperCase() + type.slice(1),
-            subtree = Taxonomy[type],
-            s, children = [];
-
-        for (s in subtree) {
-            children.push({
-                id: type + '__' + s,
-                text: subtree[s].toString()
-            });
-        }
-
-        return { text: label, children: children }
-    }
 
     function init() {
         console.info('Initializing taxonomy selection control');
@@ -34,7 +16,7 @@ window.Controls = window.Controls || {};
         return Taxonomy.init().then(() => {
             $select.select2({
                 placeholder: 'Select family/genus/species',
-                data: selectData('.taxonomy-select'),
+                data: selectData(),
             });
 
             onChange(changed);
@@ -59,7 +41,6 @@ window.Controls = window.Controls || {};
 
         selection = newSelection;
         Taxonomy.cullEnabled();
-        console.info('Selection includes %d species', selection.length);
     }
 
     function onChange(callback) {
@@ -67,7 +48,27 @@ window.Controls = window.Controls || {};
     }
 
     function get() { return selection; }
+    function set(newSelection) {
+        $select.val(newSelection).trigger('change');
+    }
+
+    function selectData() {
+        return ['species', 'genuses', 'families'].map(type => {
+            var label = type[0].toUpperCase() + type.slice(1),
+                subtree = Taxonomy[type],
+                s, children = [];
+
+            for (s in subtree) {
+                children.push({
+                    id: type + '__' + s,
+                    text: subtree[s].toString()
+                });
+            }
+
+            return { text: label, children: children }
+        });
+    }
 
 
-    Object.assign(exports, { init, onChange, get })
+    Object.assign(exports, { init, onChange, get, set })
 }(window.Controls.SelectTaxonomy = window.Controls.SelectTaxonomy || {}));

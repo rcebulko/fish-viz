@@ -46,7 +46,10 @@ window.Controls = window.Controls || {};
     }
 
     function get() { return range; }
+    function set(newDateRange) {
+        slider.set(newDateRange.map(d => new Date(d)));
+    }
 
 
-    Object.assign(exports, { init, onChange, get, formatTimestamp });
+    Object.assign(exports, { init, onChange, get, set, formatTimestamp });
 }(window.Controls.DateRange = {}));

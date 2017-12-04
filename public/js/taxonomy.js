@@ -58,6 +58,7 @@
             this._familyName     = properties.family;
             this._scientificName = properties.scientificName;
             this._commonName     = properties.commonName;
+            this._type           = 'species';
 
             this.init();
         }
@@ -76,6 +77,7 @@
         return this._commonName + ' (' + this._scientificName + ')';
     };
     Species.prototype.id = function () { return this._code; };
+    Species.prototype.key = function () { return this._type + '__' + this.id(); }
     Species.prototype.parent = function () { return this.genus(); };
     Species.prototype.isSelected = function () { return this._selected; };
     Species.prototype.select = function (state, noUpdateParent) {
@@ -147,9 +149,10 @@
 
     function Genus(genusName, familyName) {
         if (genusName) {
-            this._genusName = genusName;
+            this._genusName  = genusName;
             this._familyName = familyName;
-            this._children = {};
+            this._children   = {};
+            this._type       = 'genuses';
 
             this.init();
         }
@@ -257,7 +260,8 @@
     function Family(familyName) {
         if (familyName) {
             this._familyName = familyName;
-            this._children = {};
+            this._children   = {};
+            this._type       = 'species';
 
             this.init();
         }
@@ -300,6 +304,7 @@
 
     function Root() {
         this._children = {};
+        this._type = 'root'
     }
 
     // Prototype inheritance
@@ -311,7 +316,7 @@
     Root.prototype.toString = function () {
         return this.id() + ' (' + this.children().length + ' families)';
     }
-    Root.prototype.id = () => 'Root';
+    Root.prototype.id = () => 'root';
     Root.prototype.parent = () => null;
     Root.prototype.html = () => '<b>Root</b>'
     Root.prototype.colorize = function () {

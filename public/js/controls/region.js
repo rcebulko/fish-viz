@@ -25,7 +25,8 @@ window.Controls = window.Controls || {};
     }
 
     function get() { return region; }
+    function set(newRegion) { $region.val(newRegion); }
 
 
-    Object.assign(exports, { init, onChange, get });
+    Object.assign(exports, { init, onChange, get, set });
 }(window.Controls.Region = {}));
