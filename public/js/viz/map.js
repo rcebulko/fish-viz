@@ -64,6 +64,8 @@ window.Viz = window.Viz || {};
             initZoom();
 
             DataSource.onChange(drawSamples);
+            Viz.TaxonomyTree.onFocused(restyle);
+
             draw();
         });
     }
@@ -148,7 +150,7 @@ window.Viz = window.Viz || {};
 
     function drawSamples(samples) {
         var nodes = overlay.children().data(samples, d => d.id),
-            newNodes = nodes.enter().append('svg').attr('class', 'sample');
+            newNodes = nodes.enter().append('svg');
 
         nodes.exit().remove();
         overlay.draw();
@@ -160,14 +162,25 @@ window.Viz = window.Viz || {};
             .forEach(vis => vis.call(tip));
 
         newNodes
-            .attr('class', 'marker')
             .append('circle')
-                .attr('fill', d => '#' + d.species.color)
-                .attr('stroke', '#000')
-                .attr('stroke-width', 1)
+                .style('fill', d => d.species.color)
+                .style('stroke', '#000')
+                .style('stroke-width', 1)
                 .attr('r', d => Math.log2(2 + d.number) * 2)
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide)
+
+        restyle();
+    }
+
+    function restyle(inFocus) {
+        if (inFocus) {
+            overlay.children()
+                .style('opacity', d => d.species.isFocused() ? 1 : 0.1)
+        } else {
+            overlay.children()
+                .style('opacity', 1)
+        }
     }
 
     function fitRegion(region) {

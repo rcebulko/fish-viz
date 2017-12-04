@@ -129,7 +129,7 @@ window.Viz = window.Viz || {};
 
     function setFocus(d, state) {
         d.data.focus(state);
-        $(document).trigger('taxonomy_change.focused', d.data);
+        $(document).trigger('taxonomy_change.focused', state);
     }
 
     function focus(d) { setFocus(d, true); }
@@ -139,5 +139,5 @@ window.Viz = window.Viz || {};
         $(document).on('taxonomy_change.focused', (evt, s) => callback(s));
     }
 
-    Object.assign(exports, { init, draw, onToggled })
+    Object.assign(exports, { init, draw, onToggled, onFocused });
 }(window.Viz.TaxonomyTree = window.Viz.TaxonomyTree || {}));
