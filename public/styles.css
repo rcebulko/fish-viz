@@ -171,22 +171,22 @@ body {
 .control-panel.hidden {
     top: auto;
     right: auto;
-}
-
-.control-panel.hidden .control-panel-hide,
-.control-panel.hidden .control-panel-controls { display: none; }
-.control-panel.hidden .control-panel-show { display: block; }
-
-.control-panel-hide,
-.control-panel-show {
-    cursor: pointer;
-}
-.control-panel-show {
-    display: none;
     width: 25px;
     height: 25px;
 }
-.control-panel-show > img {
+
+.control-panel.hidden .control-panel-controls { display: none; }
+
+.control-panel-toggle {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    bottom: 10px;
+    left: 10px;
+
+    cursor: pointer;
+}
+.control-panel-toggle > img {
     width: 100%;
     height: 100%;
 }
