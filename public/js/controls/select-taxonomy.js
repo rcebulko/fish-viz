@@ -37,23 +37,27 @@ window.Controls = window.Controls || {};
                 data: selectData('.taxonomy-select'),
             });
 
-            $select.change(changed);
+            onChange(changed);
         });
     }
 
     function changed() {
-        // deselect all nodes to start
-        Taxonomy.root.deselect();
-
-        // get selected type__id keys
-        selection = $select.val()
+            // get selected type__id keys
+        var newSelection = $select.val()
             // split keys
             .map(val => val.split('__'))
             // collect nodes from taxonomy
             .map(type_id => Taxonomy[type_id[0]][type_id[1]]);
 
-        // select nodes
-        selection.forEach(n => n.select());
+        if (newSelection.length > selection.length) {
+            newSelection.filter(n => !n.isSelected())
+                .forEach(n => n.select());
+        } else if (newSelection.length < selection.length) {
+            selection.filter(n => newSelection.indexOf(n) === -1)
+                .forEach(n => n.deselect());
+        }
+
+        selection = newSelection;
         Taxonomy.cullEnabled();
         console.info('Selection includes %d species', selection.length);
     }

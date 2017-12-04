@@ -16,19 +16,7 @@ window.Viz = window.Viz || {};
 
         tip = d3.tip().attr('class', 'd3-tip')
             .html(d => d.data.html())
-            .direction('s'),
-
-        styleOpacity = d => d.data.isEnabled() ? 1 : 0.25,
-        styleStroke = d => d.data.isFocused() ? '#FFF' : '#000',
-        styleStrokeWidth = d => {
-            if (!d.data.isEnabled()) {
-                return 1;
-            } else if (!d.data.isFocused()) {
-                return 2;
-            } else {
-                return 4;
-            }
-        };
+            .direction('s');
 
 
     function init() {
@@ -39,17 +27,8 @@ window.Viz = window.Viz || {};
         height = +viz.attr('height');
         viz.call(tip);
 
-        onToggled(() => {
-            viz.selectAll('rect')
-                .style('opacity', styleOpacity)
-                .style('stroke-width', styleStrokeWidth);
-        });
-
-        onFocused(() => {
-            viz.selectAll('rect')
-                .style('stroke', styleStroke)
-                .style('stroke-width', styleStrokeWidth);
-        });
+        onToggled(restyle);
+        onFocused(restyle);
 
         Controls.SelectTaxonomy.onChange(draw);
         draw();
@@ -83,15 +62,16 @@ window.Viz = window.Viz || {};
 
         rects
             .enter().append('rect')
-                .attr('fill', d => d.data.color)
-                .on('mouseover', tip.show)
-                .on('mouseout', tip.hide)
-                .on('mouseover', focus)
-                .on('mouseout', unfocus)
+                .style('fill', d => d.data.color)
+                .on('mouseover', function (d) {
+                    tip.show.call(this, d);
+                    focus.call(this, d);
+                })
+                .on('mouseout', function (d) {
+                    tip.hide.call(this, d);
+                    unfocus.call(this, d);
+                })
                 .on('click', toggle)
-                .style('stroke', styleStroke)
-                .style('stroke-width', styleStrokeWidth)
-                .style('opacity', styleOpacity)
             .merge(rects)
                 .transition()
                     .duration(transitionDuration)
@@ -111,6 +91,23 @@ window.Viz = window.Viz || {};
                 .attr('x', d => x(minX0 / (1 - maxX1 + minX0)) + '%')
                 .attr('width', '0%')
             .remove();
+
+        restyle()
+    }
+
+    function restyle() {
+        viz.selectAll('rect')
+            .style('opacity', d => d.data.isEnabled() ? 1 : 0.25)
+            .style('stroke', d => d.data.isFocused() ? '#FFF' : '#000')
+            .style('stroke-width', d => {
+                if (!d.data.isEnabled()) {
+                    return 1;
+                } else if (!d.data.isFocused()) {
+                    return 2;
+                } else {
+                    return 4;
+                }
+            });
     }
 
     function toggle(d) {
