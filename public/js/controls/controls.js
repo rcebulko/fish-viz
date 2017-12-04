@@ -18,7 +18,10 @@
         Controls.Region.init();
         return Controls.SelectTaxonomy.init()
             .then(loadSettings)
-            .then(() => onChange(saveSettings));
+            .then(() => {
+                onChange(saveSettings);
+                Viz.TaxonomyTree.onToggled(saveSettings);
+            });
     }
 
     function enableShowHide() {
@@ -43,15 +46,18 @@
         }
     }
 
-    function saveSettings(controlName) {
+    function saveSettings() {
         var settings = get();
+        settings.enabled = settings.taxonomy
+            .filter(s => s.isEnabled())
+            .map(s => s.key())
         settings.taxonomy = settings.taxonomy.map(s => s.key())
 
-        Cookies.set('settings', settings);
+        Cookies.set('controls', settings);
     }
 
     function loadSettings() {
-        var loaded = Cookies.getJSON('settings') || {};
+        var loaded = Cookies.getJSON('controls') || {};
 
         if (loaded.region) {
             Controls.Region.set(loaded.region);
@@ -61,6 +67,13 @@
         }
         if (loaded.taxonomy) {
             Controls.SelectTaxonomy.set(loaded.taxonomy);
+        }
+        if (loaded.enabled) {
+            Taxonomy.root.disable();
+            loaded.enabled
+                .map(key => key.split('__'))
+                .map(type_id => Taxonomy[type_id[0]][type_id[1]])
+                .forEach(s => s.enable());
         }
     }
 
