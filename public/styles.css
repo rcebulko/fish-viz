@@ -188,6 +188,11 @@ body {
     height: 100%;
 }
 
+.taxonomy-select {
+    max-height: 100px; /* 25px * # rows */
+
+    overflow: auto;
+}
 .species-color-block {
     display: inline-block;
     width: 10px;
