@@ -43,10 +43,6 @@ path {
     overflow: visible;
 }
 
-#map svg {
-    overflow: visible;
-}
-
 select.taxa {
     height: 20cm;
 }
@@ -196,6 +192,12 @@ body {
 }
 
 /* map view */
-.map-overlay, .map-overlay svg {
+.map-overlay { position: absolute; }
+.map-overlay svg {
     position: absolute;
+    width: 1px;
+    height: 1px;
+
+    cursor: default;
+    overflow: visible;
 }

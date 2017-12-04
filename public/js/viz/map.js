@@ -101,17 +101,17 @@ window.Viz = window.Viz || {};
 
         SVGOverlay.prototype = new google.maps.OverlayView();
 
-        SVGOverlay.prototype.onAdd = function() {
+        SVGOverlay.prototype.onAdd = function () {
             var div = document.createElement('div');
             this.getPanes().overlayMouseTarget.appendChild(div);
             this.overlay = d3.select(div).attr('class', 'map-overlay');
         }
 
-        SVGOverlay.prototype.draw = function() {
+        SVGOverlay.prototype.draw = function () {
             this.children().each(transformSample);
         };
 
-        SVGOverlay.prototype.children = function() {
+        SVGOverlay.prototype.children = function () {
             return this.overlay.selectAll('svg');
         };
 
@@ -205,7 +205,6 @@ window.Viz = window.Viz || {};
     }
 
     function applySettings(settings) {
-        console.log(settings)
         if (settings.center) { map.panTo(settings.center); }
         if (settings.zoom) { map.setZoom(settings.zoom); }
     }
