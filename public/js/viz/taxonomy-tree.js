@@ -13,6 +13,7 @@ window.Viz = window.Viz || {};
         viz = null,
         width = 0,
         height = 0,
+        inFocus = false,
 
         tip = d3.tip().attr('class', 'd3-tip')
             .html(d => d.data.html())
@@ -97,7 +98,24 @@ window.Viz = window.Viz || {};
 
     function restyle() {
         viz.selectAll('rect')
-            .style('opacity', d => d.data.isEnabled() ? 1 : 0.25)
+            .style('opacity', d => {
+                if (inFocus) {
+                    if (d.data.isFocused()) {
+                        return 1;
+                    } else if (d.data.isEnabled()) {
+                        return 0.3;
+                    } else {
+                        return 0.1;
+                    }
+                } else {
+                    if (d.data.isEnabled()) {
+                        return 1;
+                    } else {
+                        return 0.1;
+                    }
+                }
+            })
+            // .style('stroke', '#000')
             .style('stroke', d => d.data.isFocused() ? '#FFF' : '#000')
             .style('stroke-width', d => {
                 if (!d.data.isEnabled()) {
@@ -120,6 +138,8 @@ window.Viz = window.Viz || {};
             d.data);
 
         $(document).trigger('taxonomy_change.toggled', d.data);
+
+        setFocus(d, d.data.isEnabled());
     }
 
     function onToggled(callback) {
@@ -128,6 +148,10 @@ window.Viz = window.Viz || {};
 
 
     function setFocus(d, state) {
+        if (!d.data.isEnabled()) return;
+
+        inFocus = state;
+
         d.data.focus(state);
         $(document).trigger('taxonomy_change.focused', state);
     }

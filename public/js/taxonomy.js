@@ -183,7 +183,7 @@
     };
     Genus.prototype.enable = function (state, noUpdateParent) {
         if (typeof state === 'undefined') { state = true; }
-        this._enabled = state;
+        this._enabled = state && this.isSelected();
         this.children().forEach(c => c.enable(state, true));
 
         if (this.parent() && !noUpdateParent) {
@@ -312,7 +312,6 @@
 
     // Instance methods
     Root.prototype.isSelected = () => true;
-    Root.prototype.isEnabled = () => true;
     Root.prototype.toString = function () {
         return this.id() + ' (' + this.children().length + ' families)';
     }
