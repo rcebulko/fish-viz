@@ -45,6 +45,11 @@
         enabled.slice(0, -5).forEach(s => s.disable());
     }
 
+    function fromKey(key) {
+        var type_id = key.split('__');
+        return Taxonomy[type_id[0]][type_id[1]];
+    }
+
 
     ///////////////////
     // Species class //
@@ -334,11 +339,14 @@
     root = new Root();
 
     Object.assign(exports, {
+        init,
+
+        root,
         species: Species.prototype.instances,
         genuses: Genus.prototype.instances,
         families: Family.prototype.instances,
+        fromKey,
+
         cullEnabled,
-        root,
-        init,
     });
 }(window.Taxonomy = window.Taxonomy || {}));

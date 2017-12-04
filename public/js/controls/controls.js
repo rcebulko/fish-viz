@@ -70,10 +70,7 @@
         }
         if (loaded.enabled) {
             Taxonomy.root.disable();
-            loaded.enabled
-                .map(key => key.split('__'))
-                .map(type_id => Taxonomy[type_id[0]][type_id[1]])
-                .forEach(s => s.enable());
+            loaded.enabled.map(Taxonomy.fromKey).forEach(s => s.enable());
         }
     }
 

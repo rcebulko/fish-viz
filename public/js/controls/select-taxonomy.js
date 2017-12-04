@@ -25,12 +25,7 @@ window.Controls = window.Controls || {};
     }
 
     function changed() {
-            // get selected type__id keys
-        var newSelection = $select.val()
-            // split keys
-            .map(val => val.split('__'))
-            // collect nodes from taxonomy
-            .map(type_id => Taxonomy[type_id[0]][type_id[1]]);
+        var newSelection = $select.val().map(Taxonomy.fromKey);
 
         if (newSelection.length > selection.length) {
             newSelection.filter(n => !n.isSelected())
@@ -52,18 +47,13 @@ window.Controls = window.Controls || {};
 
     function selectData() {
         return ['species', 'genuses', 'families'].map(type => {
-            var label = type[0].toUpperCase() + type.slice(1),
-                subtree = Taxonomy[type],
-                s, children = [];
-
-            for (s in subtree) {
-                children.push({
-                    id: type + '__' + s,
-                    text: subtree[s].toString()
-                });
-            }
-
-            return { text: label, children: children }
+            return {
+                text: type[0].toUpperCase() + type.slice(1),
+                children: Object.values(Taxonomy[type])
+                    .map(s => {
+                        return { id: s.key(), text: s.toString() };
+                    })
+            };
         });
     }
 
