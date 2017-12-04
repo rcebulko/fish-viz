@@ -4,28 +4,27 @@
 window.Controls = window.Controls || {};
 (function (exports) {
     var $region = $(),
-        region = '';
+        region = 'FLA KEYS';
 
 
     function init() {
         console.info('Initializing region selection control');
 
         $region = $('.geo-region');
-        $region.change(changed);
-        changed();
+
+        onChange(changed);
+        set(region);
     }
 
     function changed() {
         region = $region.val();
-        console.info('Set region to %s', region);
-    }
 
-    function onChange(callback) {
-        $region.change(() => callback(region));
+        console.log('Set region to %s', region);
     }
+    function onChange(callback) { $region.change(() => callback(get())); }
 
     function get() { return region; }
-    function set(newRegion) { $region.val(newRegion); }
+    function set(newRegion) { $region.val(newRegion).trigger('change'); }
 
 
     Object.assign(exports, { init, onChange, get, set });

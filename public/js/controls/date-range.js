@@ -12,7 +12,7 @@ window.Controls = window.Controls || {};
 
         year = timestamp('2001') - timestamp('2000'),
 
-        formatter = { to: formatTimestamp, from: timestamp }
+        formatter = { to: formatTimestamp, from: timestamp },
         range = [timestamp('2013'), timestamp('2016')];
 
 
@@ -29,20 +29,20 @@ window.Controls = window.Controls || {};
             orientation: 'vertical',
             tooltips: [formatter, formatter],
         });
-        slider.on('set', changed);
-        changed(range)
+
+        onChange(changed);
+        set(range);
     }
 
-    function changed(values) {
-        range = [new Date(+values[0]), new Date(+values[1])];
+    function changed() {
+        range = slider.get().map(d => new Date(+d));
 
         console.info('Set date range to [%s, %s]',
             formatTimestamp(range[0]),
             formatTimestamp(range[1]));
     }
-
     function onChange(callback) {
-        slider.on('set', () => callback(range));
+        slider.on('set', () => callback(get()));
     }
 
     function get() { return range; }

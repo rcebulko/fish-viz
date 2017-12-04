@@ -20,6 +20,7 @@ window.Controls = window.Controls || {};
             });
 
             onChange(changed);
+            set(selection);
         });
     }
 
@@ -42,15 +43,12 @@ window.Controls = window.Controls || {};
         selection = newSelection;
         Taxonomy.cullEnabled();
     }
-
     function onChange(callback) {
         $select.change(() => callback(selection));
     }
 
     function get() { return selection; }
-    function set(newSelection) {
-        $select.val(newSelection).trigger('change');
-    }
+    function set(newSelection) { $select.val(newSelection).trigger('change'); }
 
     function selectData() {
         return ['species', 'genuses', 'families'].map(type => {
