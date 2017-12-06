@@ -21,9 +21,7 @@
 
 
     // display and logging
-    Control.prototype.toString = function () {
-        return this.name.charAt(0).toUpperCase() + this.name.slice(1);
-    }
+    Control.prototype.toString = function () { return this.name; }
     Control.prototype.valueToString = val => val.toString();
     Control.prototype.valueString = function () {
         return this.valueToString(this.getValue());

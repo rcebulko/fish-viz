@@ -1,57 +1,43 @@
 // Dependencies:
 // - jQuery
+// - Select2
+// - Controls.Control
 
-window.Controls = window.Controls || {};
-(function (exports) {
-    var $region = $(),
-        region = 'FLA KEYS';
+(function (Controls) {
+    var regions = {
+        'FLA KEYS': 'Florida Keys',
+        'DRY TORT': 'Dry Tortugas',
+        'SEFCRI': 'Southeast Florida Coral Reef',
+    };
 
 
-    function init() {
-        console.info('Initializing region selection control');
-
-        $region = $('.geo-region').select2({
+    // region control initialization
+    function Region() {}
+    Region.prototype = new Controls.Control('Region', function () {
+        this.$region = $('.geo-region').select2({
             minimumResultsForSearch: -1,
-            data: [
-                { id: 'FLA KEYS', text: 'Florida Keys' },
-                { id: 'DRY TORT', text: 'Dry Tortugas' },
-                { id: 'SEFCRI', text: 'Southeast Florida Coral Reef' },
-            ]
+            data: Object.entries(regions).map(entry => {
+                return { id: entry[0], text: entry[1] };
+            })
         });
 
-        onChange(changed);
-        set(region);
-    }
-
-    function changed() {
-        region = $region.val();
-
-        console.log('Set region to %s', region);
-    }
-
-    function get() { return region; }
-    function set(newRegion) { $region.val(newRegion).trigger('change'); }
-    function onChange(callback) { $region.change(() => callback(get())); }
-
-    function loadState(newRegion) {
-        $region.val(newRegion).trigger('change', 'loadState');
-    }
-    function onChangeState(callback) {
-        $region.change((evt, data) => {
-            if (data !== 'loadState') callback(get());
+        this.$region.change((evt, data) => {
+            if (data !== 'triggered') this.trigger('changed.value');
         });
-    }
-
-
-    Object.assign(exports, {
-        init,
-
-        get,
-        set,
-        onChange,
-
-        saveState: get,
-        loadState,
-        onChangeState,
     });
-}(window.Controls.Region = {}));
+
+
+    // display and logging
+    Region.prototype.valueToString = val => regions[val];
+
+
+    // read/write the value from/to the select element
+    Region.prototype.readValue = function () { return this.$region.val(); };
+
+    Region.prototype.writeValue = function (newRegion) {
+        this.$region.val(newRegion).trigger('change', 'triggered');
+    };
+
+
+    Controls.Region = new Region();
+}(window.Controls = window.Controls || {}));
