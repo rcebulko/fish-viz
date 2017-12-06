@@ -5,13 +5,6 @@ path {
     stroke-width: 2px;
 }
 
-.taxa.tooltip {
-    position: absolute;
-    background-color: white;
-    border: 2px solid black;
-    border-radius: 4px;
-}
-
 #map {
     width: 100%;
     height: 100%;
@@ -165,28 +158,28 @@ body {
     border-radius: 5px;
     z-index: 20;
 }
-.control-panel.hidden {
-    top: auto;
-    right: auto;
+.control-panel-toolbar {
+    height: 25px;
+
+    margin-bottom: 10px;
+}
+.control-panel-toolbar > * {
+    display: inline-block;
     width: 25px;
+    height: 25px;
+
+    margin-right: 10px;
+
+    cursor: pointer;
+}
+.control-panel.hidden {
+    bottom: auto;
+    right: auto;
     height: 25px;
 }
 
 .control-panel.hidden .control-panel-controls { display: none; }
 
-.control-panel-toggle {
-    position: absolute;
-    width: 25px;
-    height: 25px;
-    bottom: 10px;
-    left: 10px;
-
-    cursor: pointer;
-}
-.control-panel-toggle > img {
-    width: 100%;
-    height: 100%;
-}
 
 .taxonomy-select {
     max-height: 100px; /* 25px * # rows */
@@ -200,6 +193,10 @@ body {
 }
 
 /* map view */
+.map-view {
+    height: 100%;
+    width: 100%;
+}
 .map-overlay { position: absolute; }
 .map-overlay svg {
     position: absolute;

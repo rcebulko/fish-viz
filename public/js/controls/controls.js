@@ -16,7 +16,7 @@
 
     function enableShowHide() {
         $('.control-panel-toggle').click(function () {
-            $(this).parent().toggleClass('hidden');
+            $(this).parents('.control-panel').toggleClass('hidden');
         });
     }
 

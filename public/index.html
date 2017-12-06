@@ -37,7 +37,7 @@
 
                     <!-- Map view -->
                     <div class="map-wrapper split-pane-component">
-                        <div id="map"></div>
+                        <div class="map-view"></div>
 
                         <div class="date-range-wrapper">
                             <div class='date-range'></div>
@@ -45,6 +45,12 @@
 
                         <!-- Controls and filter settings -->
                         <div class="control-panel">
+                            <div class="control-panel-toolbar">
+                                <img class="control-panel-toggle" src="img/gear.png">
+                                <img class="control-panel-undo" src="img/undo.png">
+                                <img class="control-panel-redo" src="img/redo.png">
+                            </div>
+
                             <div class="control-panel-controls">
                                 <label class="control-label">
                                     Region:
@@ -55,10 +61,6 @@
                                 <br>
 
                                 <select class='taxonomy-select' multiple="multiple"></select>
-                            </div>
-
-                            <div class="control-panel-toggle">
-                                <img src="img/gear.png">
                             </div>
                         </div>
                     </div>

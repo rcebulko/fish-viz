@@ -1,9 +1,11 @@
 (function (History) {
     var components = {},
-        state = Cookies.getJSON('state') || {},
 
-        history = Cookies.getJSON('history') || [],
-        future = Cookies.getJSON('future') || [],
+        appState = Cookies.getJSON('appState') || {},
+        state = appState.state || {},
+
+        history = appState.history || [],
+        future = appState.future || [],
 
         listeners = [],
 
@@ -12,13 +14,15 @@
 
     function init(controls) {
         controls.forEach(register);
+        $('.control-panel-undo').click(undo);
+        $('.control-panel-redo').click(redo);
     }
 
     function undo() { shiftState(history, future); }
     function redo() { shiftState(future, history); }
 
     function saveState() {
-        Cookies.set('state', { state, history, future });
+        Cookies.set('appState', { state, history, future });
     }
 
     function prune() {

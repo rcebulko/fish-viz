@@ -46,7 +46,7 @@
             .then(() => {
                 console.info('Initializing map visualization');
 
-                map = new google.maps.Map(d3.select('#map').node(), {
+                map = new google.maps.Map(d3.select('.map-view').node(), {
                     zoom: 9,
                     mapTypeId: 'terrain',
                     disableDefaultUI: true,
