@@ -26,7 +26,7 @@
     Control.prototype.valueString = function () {
         return this.valueToString(this.getValue());
     };
-    Control.prototype.log = function() {
+    Control.prototype.log = function () {
         console.info('Set %s to %s', this, this.valueString());
     };
 
@@ -52,8 +52,11 @@
         this.valueChanged();
     };
 
+    // this one can be overridden, while _set will wrap it with writing/logging
+    Control.prototype.set = function (newVal) { this.value = newVal; };
+
     Control.prototype._set = function (newVal, write) {
-        this.value = newVal;
+        this.set(newVal);
         this.state = null;
         if (write) this.writeValue(newVal);
 
@@ -78,19 +81,19 @@
     Control.prototype.getState = function () {
         if (this.state === null) this.state = this.serialize(this.getValue());
         return this.state;
-    }
+    };
 
     Control.prototype.setState = function (newState) {
         this._set(this.deserialize(newState), true);
         this.state = newState;
         this.trigger('changed.state', newState);
-    }
+    };
 
-    Control.prototype.onStateChanged = function(cb) {
+    Control.prototype.onStateChanged = function (cb) {
         this.listen('changed.state', cb);
     };
 
-    Control.prototype.stateChanged = function() {
+    Control.prototype.stateChanged = function () {
         this.trigger('changed.state', this.getState());
     };
 
@@ -102,16 +105,16 @@
         }
 
         this.listeners[event].push(cb);
-    }
+    };
 
     Control.prototype.trigger = function (event, data) {
         (this.listeners[event] || []).forEach(cb => cb(data));
-    }
+    };
 
     Control.prototype.onChanged = function (cb) {
         this.onValueChanged(cb);
         this.onStateChanged(cb);
-    }
+    };
 
 
     Controls.Control = Control;

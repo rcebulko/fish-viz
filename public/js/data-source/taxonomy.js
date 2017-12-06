@@ -49,7 +49,7 @@
     function getEnabled() { return enabled; }
     function setEnabled(enabled) {
         root.disable();
-        enabled.map(Taxonomy.fromKey).forEach(n => n.enable());
+        enabled.forEach(n => n.enable());
         cullEnabled();
     }
     function cullEnabled() {
