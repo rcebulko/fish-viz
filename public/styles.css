@@ -133,11 +133,11 @@ body {
 
 /* initial panel sizing */
 .taxatree-wrapper {
-    min-height: 150px;
+    min-height: 100px;
 }
 
 .main-panel {
-    top: 150px;
+    top: 100px;
     margin-top: 3px;
 }
 

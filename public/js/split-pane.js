@@ -7,7 +7,7 @@
         console.info('Initializing split panels');
 
         $('.split-pane').splitPane();
-        $('.outer-pane').splitPane('firstComponentSize', 150);
+        $('.outer-pane').splitPane('firstComponentSize', 100);
         $('.nested-pane').splitPane('firstComponentSize', 250);
     }
 
