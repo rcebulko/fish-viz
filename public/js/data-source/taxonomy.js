@@ -3,7 +3,7 @@
         initPromise = null,
         scheme = new ColorScheme,
         enabled = [],
-        enabledLimit = 5;
+        enabledLimit = 10;
 
 
     function init() {
@@ -33,7 +33,7 @@
     }
 
     function cullEnabled() {
-        enabled.slice(0, -5).forEach(s => s.disable());
+        enabled.slice(0, -enabledLimit).forEach(s => s.disable());
     }
 
 
