@@ -68,14 +68,18 @@
         var oldSelections = this.getValue(),
 
             oldSelected = oldSelections.selected,
-            newSelected = newSelections.selected;
+            newSelected = newSelections.selected,
+
+            removed = [],
+            kept = [];
 
         if (newSelected.length > oldSelected.length) {
-            newSelected.filter(n => !n.isSelected())
-                .forEach(n => n.select());
+            newSelected.forEach(n => n.select());
         } else if (newSelected.length < oldSelected.length) {
-            oldSelected.filter(n => newSelected.indexOf(n) === -1)
-                .forEach(n => n.deselect());
+            oldSelected.forEach(n =>
+                (newSelected.indexOf(n) === -1 ? removed : kept).push(n));
+            removed.forEach(n => n.deselect());
+            kept.forEach(n => n.select());
         }
 
         Taxonomy.setEnabled(newSelections.enabled);

@@ -227,7 +227,7 @@
                 { lat: edges.north + height, lng: edges.east + width },
             ),
 
-            pxPerBucket = 40,
+            pxPerBucket = 30,
 
             vertRes = 3 * mapNode.offsetHeight / pxPerBucket,
             horizRes = 3 * mapNode.offsetWidth / pxPerBucket,
@@ -346,13 +346,38 @@
                 .style('fill', d => d.species.color)
                 .style('stroke', '#000')
                 .style('stroke-width', 1)
-                .attr('r', d => Math.log2(2 + (d.aggregated ? d.totalNumber : d.number)) * 2)
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide)
+            .merge(nodes)
+                .attr('r', normalizedRadiusFn(samples));
 
         restyle();
 
         if (complete) loading(false);
+    }
+
+    function normalizedRadiusFn(samples) {
+        var minR = 5, maxR = 20,
+            minNum = Infinity,
+            maxNum = -Infinity,
+
+            getNum = s => Math.sqrt(s.aggregated ? s.totalNumber : s.number),// Math.log(1.5),
+
+            // scale values between 0 and 1
+            znorm = val => (val - minNum) / (maxNum - minNum);
+
+        samples.map(getNum)
+            .forEach(num => {
+                minNum = Math.min(minNum, num);
+                maxNum = Math.max(maxNum, num);
+            });
+
+        if (minNum === maxNum) {
+            return () => (minR + maxR) / 2;
+        } else {
+            return d => minR + znorm(getNum(d)) * (maxR - minR);
+        }
+
     }
 
     function restyle(inFocus) {
