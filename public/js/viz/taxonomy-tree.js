@@ -1,10 +1,4 @@
-// Dependencies:
-// - d3
-// - taxonomy
-// - select-taxonomy
-
-window.Viz = window.Viz || {};
-(function (exports) {
+(function (TaxonomyTree, API, Taxonomy, SelectTaxonomy, History) {
     var x = d3.scaleLinear().range([0, 100]),
         y = d3.scalePow().exponent(1.5).range([0, 100]),
         color = d3.scaleOrdinal(d3.schemeCategory20),
@@ -28,13 +22,8 @@ window.Viz = window.Viz || {};
         height = +viz.attr('height');
         viz.call(tip);
 
-        onToggled(restyle);
         onFocused(restyle);
-
-        Controls.History.onChangeState(component => {
-            if (component === 'taxonomy') draw();
-        });
-        Controls.SelectTaxonomy.onChange(draw);
+        SelectTaxonomy.onChanged(draw);
         draw();
     }
 
@@ -140,13 +129,8 @@ window.Viz = window.Viz || {};
             'abled ' +
             d.data);
 
-        $(document).trigger('taxonomy_change.enabled');
-
+        SelectTaxonomy.loadValue()
         setFocus(d, d.data.isEnabled());
-    }
-
-    function onToggled(callback) {
-        $(document).on('taxonomy_change.enabled', () => callback());
     }
 
 
@@ -166,28 +150,9 @@ window.Viz = window.Viz || {};
         $(document).on('taxonomy_change.focused', (evt, s) => callback(s));
     }
 
-
-    function saveState() { return Controls.SelectTaxonomy.saveState(); }
-    function loadState(newState) {
-        Taxonomy.setEnabled(newState.enabled);
-        $(document).trigger('taxonomy_change.enabled', loadState);
-    }
-    function onChangeState(callback) {
-        $(document).on('taxonomy_change.enabled', (evt, data) => {
-            if (data !== 'loadState') callback(saveState());
-        });
-    }
-
-    Object.assign(exports, {
-        init,
-
-        onToggled,
-        onFocused,
-
-        saveState,
-        loadState,
-        onChangeState,
-
-        draw,
-    });
-}(window.Viz.TaxonomyTree = window.Viz.TaxonomyTree || {}));
+    Object.assign(TaxonomyTree, { init, draw, onFocused });
+}(window.Viz.TaxonomyTree = {},
+    window.API,
+    window.Taxonomy,
+    Controls.SelectTaxonomy,
+    Controls.History));

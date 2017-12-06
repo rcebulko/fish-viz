@@ -1,9 +1,4 @@
-// Dependencies:
-// - jQuery
-// - Select2
-// - Controls.Control
-
-(function (Controls) {
+(function (register) {
     var regions = {
         'FLA KEYS': 'Florida Keys',
         'DRY TORT': 'Dry Tortugas',
@@ -13,7 +8,7 @@
 
     // region control initialization
     function Region() {}
-    Controls.register(Region, function () {
+    register(Region, function () {
         this.$region = $('.geo-region').select2({
             minimumResultsForSearch: -1,
             data: Object.entries(regions).map(entry => {
@@ -37,7 +32,4 @@
     Region.prototype.writeValue = function (newRegion) {
         this.$region.val(newRegion).trigger('change', 'triggered');
     };
-
-
-    Controls.Region = new Region();
-}(window.Controls));
+}(window.Controls.register));

@@ -1,7 +1,4 @@
-// Dependencies:
-// - jQuery
-
-(function (exports) {
+(function (API) {
     var API_PATH = 'http://localhost:1337/api/';
 
     // fetch taxonomy data
@@ -24,5 +21,5 @@
             Object.assign({ species_code: speciesCode }, filterOpts));
     }
 
-    Object.assign(exports, { fetchSpecies, fetchSamples, fetchSpeciesSamples });
-}(window.API = window.API || {}));
+    Object.assign(API, { fetchSpecies, fetchSamples, fetchSpeciesSamples });
+}(window.API = {}));

@@ -82,10 +82,11 @@
         <!-- Resizeable panels -->
         <script src="third-party/split-pane.js"></script>
 
+
+        <script src="js/util.js"></script>
         <!-- Core data modules -->
         <script src="js/data-source/api.js"></script>
         <script src="js/data-source/taxonomy.js"></script>
-        <!-- <script src="js/data-source/samples.js"></script> -->
 
         <!-- Control modules -->
         <script src="js/controls/controls.js"></script>
@@ -94,19 +95,22 @@
         <script src="js/controls/region.js"></script>
         <script src="js/controls/date-range.js"></script>
         <script src="js/controls/select-taxonomy.js"></script>
-        <!-- <script src="js/controls/history.js"></script> -->
+        <script src="js/controls/history.js"></script>
+
+        <!-- Samples data source -->
+        <script src="js/data-source/samples.js"></script>
 
         <!-- Visualizations -->
         <script src="js/viz/viz.js"></script>
-        <script src="js/viz/map.js"></script>
         <script src="js/viz/taxonomy-tree.js"></script>
+        <script src="js/viz/map.js"></script>
 
         <script type="text/javascript">
             $(function () {
                 Taxonomy.init()
                     .then(Controls.init)
-                    // .then(DataSource.init)
-                    // .then(Viz.init);
+                    .then(Samples.init)
+                    .then(Viz.init);
             });
         </script>
 

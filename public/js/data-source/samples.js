@@ -1,11 +1,29 @@
-// Dependencies:
-// - taxonomy
-// - api
-// - controls
-// - taxonomy-tree
+(function (Samples, Taxonomy, API, Controls) {
+    var listeners = [];
 
-(function (exports) {
-    var callbacks = [];
+
+    function init() {
+        console.info('Initializing data source');
+        Controls.onChanged(() => getSamples().then(trigger));
+    }
+
+    function getSamples() {
+        var region = Controls.Region.getValue(),
+            dateRange = Controls.DateRange.getValue(),
+            species = Controls.SelectTaxonomy.getValue().enabled;
+
+        return Promise.all(
+            species.map(s => getSpeciesSamples(s, region, dateRange)))
+            .then(sampleSets => {
+                var samples = sampleSets.reduce((acc, arr) => acc.concat(arr), []);
+                console.debug('Collected a total of %d samples', samples.length);
+
+                return samples;
+            });
+    }
+
+    function onChanged(callback) { listeners.push(callback); }
+
 
     function preprocess(sample, species) {
         sample.date = new Date(sample.date);
@@ -14,7 +32,7 @@
     }
 
     function getSpeciesSamples(species, region, dateRange) {
-        var fmt = Controls.DateRange.formatTimestamp;
+        var fmt = Controls.DateRange.format;
 
         return API.fetchSpeciesSamples(species.id(), {
             region,
@@ -28,41 +46,10 @@
         });
     }
 
-    function getSamples() {
-        var region = Controls.Region.get(),
-            dateRange = Controls.DateRange.get(),
-            species = Controls.SelectTaxonomy.get()
-                .map(n => n.allSpecies())
-                .reduce((acc, arr) => acc.concat(arr), []);
-
-        return Promise.all(
-            species
-                .filter(s => s.isEnabled())
-                .map(s => getSpeciesSamples(s, region, dateRange)))
-            .then(sampleSets => {
-                samples = sampleSets.reduce((acc, arr) => acc.concat(arr), []);
-                console.debug('Collected a total of %d samples', samples.length);
-
-                return samples;
-            });
-    }
-
-    function onChange(callback) {
-        callbacks.push(callback);
-    }
-
-    function executeCallbacks(samples) {
-        callbacks.forEach(cb => cb(samples));
-    }
-
-    function init() {
-        console.info('Initializing data source');
-
-        Controls.onChange(() => getSamples().then(executeCallbacks));
-        Viz.TaxonomyTree.onToggled(() => getSamples().then(executeCallbacks))
-        Controls.History.onChangeState(() => getSamples().then(executeCallbacks));
+    function trigger(samples) {
+        listeners.forEach(cb => cb(samples));
     }
 
 
-    Object.assign(exports, { getSamples, onChange, init });
-}(window.DataSource = window.DataSource || {}));
+    Object.assign(Samples, { getSamples, onChanged, init });
+}(window.Samples = {}, window.Taxonomy, window.API, window.Controls));

@@ -1,8 +1,4 @@
-// Dependencies:
-// - noUiSlider
-// - Controls.Control
-
-(function (Controls) {
+(function (register) {
     var timestamp = str => new Date(str).getTime(),
         formatTimestamp = ts => new Date(ts)
             .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
@@ -16,7 +12,7 @@
 
     // date range control initialization
     function DateRange() {}
-    Controls.register(DateRange, function (initRange) {
+    register(DateRange, function (initRange) {
         this.slider = noUiSlider.create(document.querySelector('.date-range'), {
             range: { min: timestamp('1999'), max: timestamp('2018') },
             step: year / 12, // step by month (roughly)
@@ -60,7 +56,4 @@
         this.slider.set(newDateRange);
         this.isWriting = false;
     };
-
-
-    Controls.DateRange = new DateRange();
-}(window.Controls = window.Controls || {}));
+}(window.Controls.register));

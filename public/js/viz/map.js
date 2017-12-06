@@ -1,11 +1,4 @@
-// Dependencies:
-// - d3
-// - GMap
-// data-source
-// viz/taxonomy-tree
-
-window.Viz = window.Viz || {};
-(function (exports) {
+(function (Map, TaxonomyTree, Samples, Controls) {
     var regionBounds = {
         'FLA KEYS': {
             lat: [24.4313, 25.7526],
@@ -31,7 +24,7 @@ window.Viz = window.Viz || {};
             return [
                 '<b>Sample</b>',
                 [
-                    ['Date', Controls.DateRange.formatTimestamp(sample.date)],
+                    ['Date', Controls.DateRange.format(sample.date)],
                     ['Latitude', sample.latitude.toFixed(5)],
                     ['Longitude', sample.longitude.toFixed(5)],
                     ['Depth', sample.depth],
@@ -68,14 +61,13 @@ window.Viz = window.Viz || {};
                 initPan();
                 initZoom();
 
-                Controls.Region.onChange(fitRegion);
-                DataSource.onChange(drawSamples);
-                Viz.TaxonomyTree.onFocused(restyle);
+                Controls.Region.onChanged(fitRegion);
+                Samples.onChanged(drawSamples);
+                TaxonomyTree.onFocused(restyle);
             })
             .then(draw)
             .then(() => {
-                // needs to be async for some reason
-                setTimeout(applySettings(settings), 0);
+                initHistory();
             });
     }
 
@@ -89,7 +81,7 @@ window.Viz = window.Viz || {};
             regionBounds[region] = bounds;
         });
 
-        fitRegion(Controls.Region.get());
+        fitRegion(Controls.Region.getValue());
     }
 
     function initOverlay() {
@@ -145,21 +137,17 @@ window.Viz = window.Viz || {};
 
                 map.panTo(center);
             }
-
-            saveSettings();
         });
     }
 
     function initZoom() {
-        google.maps.event.addListener(map, 'bounds_changed', () =>  {
-            overlay.draw();
-            saveSettings();
-        });
+        google.maps.event.addListener(map, 'bounds_changed',
+            () => overlay.draw());
     }
 
 
     function draw() {
-        return DataSource.getSamples().then(drawSamples);
+        return Samples.getSamples().then(drawSamples);
     }
 
     function drawSamples(samples) {
@@ -197,23 +185,46 @@ window.Viz = window.Viz || {};
         }
     }
 
-    function saveSettings() {
-        Cookies.set('map-settings', {
-            center: map.getCenter(),
-            zoom: map.getZoom(),
-        });
-    }
-
-    function applySettings(settings) {
-        if (settings.center) { map.panTo(settings.center); }
-        if (settings.zoom) { map.setZoom(settings.zoom); }
-    }
-
     function fitRegion(region) {
         bounds = regionBounds[region];
         map.fitBounds(bounds);
     }
 
 
-    Object.assign(exports, { init, mapLoaded })
-}(window.Viz.Map = window.Viz.Map || {}));
+    // history interface
+    function initHistory() {
+        function MapState () {
+            this.name = 'MapState';
+            this.listeners = [];
+            google.maps.event.addListener(map, 'bounds_changed', () =>
+                !this.isWriting && this.triggerChanged());
+        }
+
+        MapState.prototype.getState = function () {
+            return { center: map.getCenter(), zoom: map.getZoom() }
+        };
+
+        MapState.prototype.setState = function (newState) {
+            this.isWriting = true;
+            map.panTo(newState.center);
+            map.setZoom(newState.zoom);
+            this.isWriting = false;
+        };
+
+        MapState.prototype.triggerChanged = debounce(function () {
+            this.listeners.forEach(cb => cb());
+        }, 3000);
+
+        MapState.prototype.onValueChanged = function (cb) {
+            this.listeners.push(cb);
+        };
+
+        Controls.History.register(new MapState());
+    }
+
+
+    Object.assign(Map, { init, mapLoaded })
+}(window.Viz.Map = {},
+    window.Viz.TaxonomyTree,
+    window.Samples,
+    window.Controls));

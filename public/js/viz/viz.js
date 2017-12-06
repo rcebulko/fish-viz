@@ -1,4 +1,4 @@
-(function (exports) {
+(function (Viz) {
     function init() {
         console.info('Initializing visualizations');
 
@@ -7,5 +7,5 @@
     }
 
 
-    Object.assign(exports, { init })
+    Object.assign(Viz, { init })
 }(window.Viz = window.Viz || {}))

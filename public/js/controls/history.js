@@ -1,40 +1,36 @@
-// Dependencies:
-// - controls
-// - - jQuery
-// - - JS Cookie
-// - - controls/date-range
-// - - - noUiSlider
-// - - controls/region
-// - - controls/select-taxonomy
-// - - - Select2
-// - - - Taxonomy
-
-window.Controls = window.Controls || {};
-(function (exports) {
+(function (History) {
     var components = {},
-        state = {},
+        state = Cookies.getJSON('state') || {},
 
-        history = [],
-        future = [],
+        history = Cookies.getJSON('history') || [],
+        future = Cookies.getJSON('future') || [],
 
-        listeners = [];
+        listeners = [],
 
-    function init() {
-        components = {
-            dateRange: Controls.DateRange,
-            region: Controls.Region,
-            taxonomy: Controls.SelectTaxonomy,
-        }
+        maxHistory = 20,
+        maxFuture = 20;
 
-        Object.keys(components).forEach(initComponent);
+    function init(controls) {
+        controls.forEach(register);
     }
 
+    function undo() { shiftState(history, future); }
+    function redo() { shiftState(future, history); }
+
+    function saveState() {
+        Cookies.set('state', { state, history, future });
+    }
+
+    function prune() {
+        history = history.slice(-maxHistory);
+        future = future.slice(0, maxFuture);
+    }
 
     function shiftState(popQ, pushQ) {
         var shifted = popQ.pop();
 
         if (shifted) {
-            components[shifted[0]].loadState(shifted[1]);
+            components[shifted[0]].setState(shifted[1]);
             pushState(pushQ, shifted[0]);
 
             executeListeners(shifted[0]);
@@ -45,39 +41,45 @@ window.Controls = window.Controls || {};
 
     function pushState(Q, name) {
         Q.push([name, state[name]]);
-        state[name] = components[name].saveState();
+        state[name] = components[name].getState();
+
+        prune();
+        saveState();
     }
 
-    function undo() { shiftState(history, future); }
-    function redo() { shiftState(future, history); }
 
-    function initComponent(name) {
-        var component = components[name];
+    function register(component) {
+        components[component.name] = component;
 
-        component.onChangeState(newVal => {
+        component.onValueChanged(newVal => {
             future = [];
-            pushState(history, name);
+            pushState(history, component.name);
         });
 
-        state[name] = components[name].saveState();
+        if (state[component.name]) {
+            console.debug('Initializing %s with stored value');
+            component.setState(state[component.name]);
+        } else {
+            state[component.name] = component.getState();
+        }
     }
 
 
-    function onChangeState(callback) {
-        listeners.push(callback);
-    }
+    function onStateChanged(callback) { listeners.push(callback); }
 
     function executeListeners(component) {
         listeners.forEach(cb => cb(component));
     }
 
 
-    Object.assign(exports, {
+    Object.assign(History, {
         init,
+        register,
 
         undo,
         redo,
 
-        onChangeState,
+        onStateChanged,
+        getStates: () => history.concat([state]).concat(future)
     });
-}(window.Controls.History = window.Controls.History || {}))
+}(window.Controls.History = {}))

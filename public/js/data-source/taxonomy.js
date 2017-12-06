@@ -1,8 +1,4 @@
-// Dependencies:
-// - Color Scheme
-// - api
-
-(function (exports) {
+(function (Taxonomy, API) {
     var root,
         initPromise = null,
         scheme = new ColorScheme,
@@ -14,17 +10,34 @@
         if (initPromise === null) {
             console.info('Initializing taxonomy');
 
-            initPromise = API.fetchSpecies().then(data => {
-                data.forEach(s => new Species(s));
-                root.colorize();
+            initPromise = API.fetchSpecies()
+                .then(data => {
+                    data.forEach(s => new Species(s));
+                    root.colorize();
 
-                return root;
-            });
+                    return root;
+                });
         }
 
         return initPromise;
     }
 
+
+    // helpers for manipluting the set of enabled species
+    function getEnabled() { return enabled; }
+
+    function setEnabled(enabled) {
+        root.disable();
+        enabled.forEach(n => n.enable());
+        cullEnabled();
+    }
+
+    function cullEnabled() {
+        enabled.slice(0, -5).forEach(s => s.disable());
+    }
+
+
+    // utility functions
     function fromKey(key) {
         var type_id = key.split('__');
         return Taxonomy[type_id[0]][type_id[1]];
@@ -44,16 +57,6 @@
             .filter(c => !(
                 c.slice(0, 2) === c.slice(2, 4) &&
                 c.slice(2, 4) === c.slice(4, 6)) );
-    }
-
-    function getEnabled() { return enabled; }
-    function setEnabled(enabled) {
-        root.disable();
-        enabled.forEach(n => n.enable());
-        cullEnabled();
-    }
-    function cullEnabled() {
-        enabled.slice(0, -5).forEach(s => s.disable());
     }
 
 
@@ -347,7 +350,7 @@
 
     root = new Root();
 
-    Object.assign(exports, {
+    Object.assign(Taxonomy, {
         init,
 
         root,
@@ -360,4 +363,4 @@
         setEnabled,
         cullEnabled,
     });
-}(window.Taxonomy = window.Taxonomy || {}));
+}(window.Taxonomy = {}, window.API));

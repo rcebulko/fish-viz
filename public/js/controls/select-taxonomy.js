@@ -1,10 +1,4 @@
-// Dependencies:
-// - jQuery
-// - Select2
-// - Taxonomy
-// - Controls.Control
-
-(function (Controls) {
+(function (register, Taxonomy) {
     var colorBlock = color => {
             return '<span style="background-color: ' +
                 color +
@@ -34,7 +28,7 @@
 
     // taxonomy selection initialization
     function SelectTaxonomy() {}
-    Controls.register(SelectTaxonomy, function () {
+    register(SelectTaxonomy, function () {
         this.$select = $('.taxonomy-select');
 
         return Taxonomy.init()
@@ -85,6 +79,7 @@
         }
 
         Taxonomy.setEnabled(newSelections.enabled);
+        newSelections.enabled = Taxonomy.getEnabled();
     };
 
 
@@ -97,7 +92,7 @@
     };
 
     SelectTaxonomy.prototype.writeValue = function(newSelections) {
-        this.$select.val(newSelections.selected);
+        this.$select.val(newSelections.selected.map(n => n.key()));
         this.$select.trigger('change', 'triggered');
     };
 
@@ -116,7 +111,4 @@
             enabled: selections.enabled.map(Taxonomy.fromKey),
         };
     };
-
-
-    Controls.SelectTaxonomy = new SelectTaxonomy();
-}(window.Controls));
+}(window.Controls.register, window.Taxonomy));

@@ -1,8 +1,3 @@
-// Dependencies:
-// - jQuery
-// - SplitPane
-// - Controls.Control
-
 (function (Controls) {
     function SplitPane() {}
     SplitPane.prototype.init = function (initSizes) {
@@ -17,4 +12,4 @@
 
 
     Controls.SplitPane = new SplitPane();
-}(window.Controls = window.Controls || {}));
+}(window.Controls));
