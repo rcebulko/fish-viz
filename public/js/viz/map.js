@@ -180,6 +180,9 @@
                 map.panTo(center);
             }
         });
+
+        google.maps.event.addListener(map, 'center_changed',
+            throttle(() => draw(), 1000));
     }
 
     function initZoom() {
