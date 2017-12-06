@@ -61,7 +61,7 @@
         });
 
         if (state[component.name]) {
-            console.debug('Initializing %s with stored value');
+            console.debug('Initializing %s with stored value', component.name);
             component.setState(state[component.name]);
         } else {
             state[component.name] = component.getState();
