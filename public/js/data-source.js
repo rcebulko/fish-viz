@@ -60,7 +60,7 @@
 
         Controls.onChange(() => getSamples().then(executeCallbacks));
         Viz.TaxonomyTree.onToggled(() => getSamples().then(executeCallbacks))
-        Controls.History.onUndo(() => getSamples().then(executeCallbacks));
+        Controls.History.onChangeState(() => getSamples().then(executeCallbacks));
     }
 
 

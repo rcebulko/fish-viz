@@ -33,7 +33,14 @@ window.Controls = window.Controls || {};
     function set(newRegion) { $region.val(newRegion).trigger('change'); }
     function onChange(callback) { $region.change(() => callback(get())); }
 
-    function loadState(newRegion) { $region.val(newRegion); }
+    function loadState(newRegion) {
+        $region.val(newRegion).trigger('change', 'loadState');
+    }
+    function onChangeState(callback) {
+        $region.change((evt, data) => {
+            if (data !== 'loadState') callback(get());
+        });
+    }
 
 
     Object.assign(exports, {
@@ -44,7 +51,7 @@ window.Controls = window.Controls || {};
         onChange,
 
         saveState: get,
-        loadState: set,
-        onChangeState: onChange,
+        loadState,
+        onChangeState,
     });
 }(window.Controls.Region = {}));

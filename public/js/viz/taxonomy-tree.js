@@ -31,8 +31,8 @@ window.Viz = window.Viz || {};
         onToggled(restyle);
         onFocused(restyle);
 
-        Controls.History.onUndo(undoComponent => {
-            if (undoComponent === 'taxonomy') draw();
+        Controls.History.onChangeState(component => {
+            if (component === 'taxonomy') draw();
         });
         Controls.SelectTaxonomy.onChange(draw);
         draw();

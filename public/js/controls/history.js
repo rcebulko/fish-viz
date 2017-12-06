@@ -13,28 +13,51 @@ window.Controls = window.Controls || {};
 (function (exports) {
     var components = {},
         state = {},
+
         history = [],
-        undoHandlers = [];
+        future = [],
+
+        listeners = [];
 
     function init() {
         components = {
             dateRange: Controls.DateRange,
             region: Controls.Region,
             taxonomy: Controls.SelectTaxonomy,
-            // taxonomyEnabled: Viz.TaxonomyTree,
         }
 
         Object.keys(components).forEach(initComponent);
     }
 
-    function undo() {
-        var prev = history.pop();
-        if (prev) {
-            console.debug('Popped history state:', Object.assign({}, state));
 
-            components[prev[0]].loadState(prev[1]);
-            executeUndoHandlers(prev[0]);
+    function shiftState(popQ, pushQ) {
+        var shifted = popQ.pop();
+
+        if (shifted) {
+            components[shifted[0]].loadState(shifted[1]);
+            pushState(pushQ, shifted[0]);
+
+            executeListeners(shifted[0]);
         }
+
+        return shifted;
+    }
+
+    function pushState(Q, name) {
+        Q.push([name, state[name]]);
+        state[name] = components[name].saveState();
+    }
+
+    function undo() {
+        console.debug('Popped history state:', shiftState(history, future));
+        console.debug('New future:', future);
+
+    }
+
+    function redo() {
+        console.debug('Popped future state:', shiftState(future, history));
+        console.debug('New history:', history);
+
     }
 
 
@@ -42,10 +65,12 @@ window.Controls = window.Controls || {};
         var component = components[name];
 
         component.onChangeState(newVal => {
-            console.debug('Pushing history state:', state[name]);
+            console.debug('Pushing history state:', [name, state[name]]);
 
-            history.push([name, state[name]]);
-            state[name] = components[name].saveState();
+            future = [];
+            pushState(history, name);
+            // history.push([name, state[name]]);
+            // state[name] = components[name].saveState();
 
             console.debug('New history state:', Object.assign({}, state));
         });
@@ -53,14 +78,25 @@ window.Controls = window.Controls || {};
     }
 
 
-    function onUndo(callback) {
-        undoHandlers.push(callback);
+    function onChangeState(callback) {
+        listeners.push(callback);
     }
 
-    function executeUndoHandlers(undoComponent) {
-        undoHandlers.forEach(cb => cb(undoComponent));
+    function executeListeners(component) {
+        listeners.forEach(cb => cb(component));
     }
 
 
-    Object.assign(exports, { init, undo, onUndo, history });
+    Object.assign(exports, {
+        init,
+
+        undo,
+        redo,
+
+        onChangeState,
+
+        getHistory: () => history,
+        getFuture: () => future,
+        getStates: () => history.concat([state]).concat(future),
+    });
 }(window.Controls.History = window.Controls.History || {}))
