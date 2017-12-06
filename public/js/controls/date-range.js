@@ -13,7 +13,9 @@ window.Controls = window.Controls || {};
         year = timestamp('2001') - timestamp('2000'),
 
         formatter = { to: formatTimestamp, from: timestamp },
-        range = [timestamp('2013'), timestamp('2016')];
+        range = [timestamp('2013'), timestamp('2016')],
+
+        isChanged;
 
 
     function init() {
@@ -30,16 +32,24 @@ window.Controls = window.Controls || {};
             tooltips: [formatter, formatter],
         });
 
+        slider.on('change', () => {
+            // when both handles are dragged, the slider double-fires events
+            isChanged = slider.get()
+                .map(valStr => +valStr)
+                .some((val, i) => val !== range[i]);
+        });
         onChange(changed);
         set(range);
     }
 
     function changed() {
-        range = slider.get().map(d => new Date(+d));
+        if (isChanged) {
+            range = slider.get().map(ts => +ts);
 
-        console.info('Set date range to [%s, %s]',
-            formatTimestamp(range[0]),
-            formatTimestamp(range[1]));
+            console.info('Set date range to [%s, %s]',
+                formatTimestamp(range[0]),
+                formatTimestamp(range[1]));
+        }
     }
 
 
@@ -47,10 +57,17 @@ window.Controls = window.Controls || {};
     function set(newDateRange) {
         slider.set(newDateRange.map(d => new Date(d)));
     }
-    function onChange(callback) { slider.on('set', () => callback(get())); }
+    function onChange(callback) {
+        slider.on('set', () => {
+            if (isChanged) callback(get());
+        });
+    }
+
 
     function onChangeState(callback) {
-        slider.on('change', () => callback(get()));
+        slider.on('change', () => {
+            if (isChanged) callback(get());
+        });
     }
 
 

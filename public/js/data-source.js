@@ -18,7 +18,7 @@
 
         return API.fetchSpeciesSamples(species.id(), {
             region,
-            date: { gt: dateRange[0], lt: dateRange[1] }
+            date: { gt: new Date(dateRange[0]), lt: new Date(dateRange[1]) }
         }).then(samples => {
             console.debug('Fetched %d samples for %s in %s from %s to %s',
                 samples.length, species.id(), region,
