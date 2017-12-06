@@ -22,7 +22,7 @@
         });
 
         this.$region.change((evt, data) => {
-            if (data !== 'triggered') this.trigger('changed.value');
+            if (data !== 'triggered') this.loadValue();
         });
     });
 

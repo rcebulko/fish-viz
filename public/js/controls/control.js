@@ -15,7 +15,7 @@
         console.info('Initializing %s control', this.name);
 
         return Promise.all([])
-            .then(() => this.initComponent())
+            .then(() => this.initComponent(initVal))
             .then(() => this.setValue(initVal));
     }
 
@@ -43,19 +43,29 @@
     };
 
     Control.prototype.setValue = function (newVal) {
-        this._set(newVal);
-        this.state = null;
-        this.trigger('changed.value', newVal);
-    }
+        this._set(newVal, true);
+        this.valueChanged();
+    };
 
-    Control.prototype._set = function (newVal) {
+    Control.prototype.loadValue = function () {
+        this._set(this.readValue(), false);
+        this.valueChanged();
+    };
+
+    Control.prototype._set = function (newVal, write) {
         this.value = newVal;
-        this.writeValue(newVal);
+        this.state = null;
+        if (write) this.writeValue(newVal);
+
         this.log();
     };
 
     Control.prototype.onValueChanged = function (cb) {
         this.listen('changed.value', cb);
+    };
+
+    Control.prototype.valueChanged = function () {
+        this.trigger('changed.value', this.getValue());
     };
 
 
@@ -71,13 +81,17 @@
     }
 
     Control.prototype.setState = function (newState) {
-        this._set(this.deserialize(newState));
+        this._set(this.deserialize(newState), true);
         this.state = newState;
         this.trigger('changed.state', newState);
     }
 
     Control.prototype.onStateChanged = function(cb) {
         this.listen('changed.state', cb);
+    };
+
+    Control.prototype.stateChanged = function() {
+        this.trigger('changed.state', this.getState());
     };
 
 

@@ -14,10 +14,13 @@
 
         enableShowHide();
 
-        Controls.DateRange.init();
-        Controls.Region.init();
-        return Controls.SelectTaxonomy.init()
-            .then(Controls.History.init)
+
+        Controls.SplitPane.init();
+        Controls.Region.init('FLA KEYS')
+            .then(() => Controls.DateRange.init([2013, 2016]
+                .map(year => new Date('' + year).getTime())))
+        // return Controls.SelectTaxonomy.init()
+        //     .then(Controls.History.init)
             // .then(loadSettings)
             // .then(() => {
             //     onChange(saveSettings);

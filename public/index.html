@@ -83,17 +83,18 @@
         <script src="third-party/split-pane.js"></script>
 
         <!-- Core data modules -->
-        <script src="js/data/api.js"></script>
-        <script src="js/data/taxonomy.js"></script>
-        <script src="js/data/data-source.js"></script>
+        <script src="js/data-source/api.js"></script>
+        <script src="js/data-source/taxonomy.js"></script>
+        <!-- <script src="js/data-source/samples.js"></script> -->
 
         <!-- Control modules -->
         <script src="js/controls/controls.js"></script>
+        <script src="js/controls/control.js"></script>
         <script src="js/controls/split-pane.js"></script>
-        <script src="js/controls/date-range.js"></script>
         <script src="js/controls/region.js"></script>
-        <script src="js/controls/select-taxonomy.js"></script>
-        <script src="js/controls/history.js"></script>
+        <script src="js/controls/date-range.js"></script>
+        <!-- <script src="js/controls/select-taxonomy.js"></script>
+        <script src="js/controls/history.js"></script> -->
 
         <!-- Visualizations -->
         <script src="js/viz/viz.js"></script>
@@ -104,8 +105,8 @@
             $(function () {
                 Taxonomy.init()
                     .then(Controls.init)
-                    .then(DataSource.init)
-                    .then(Viz.init);
+                    // .then(DataSource.init)
+                    // .then(Viz.init);
             });
         </script>
 
