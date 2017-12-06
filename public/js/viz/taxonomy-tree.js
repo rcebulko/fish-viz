@@ -140,13 +140,13 @@ window.Viz = window.Viz || {};
             'abled ' +
             d.data);
 
-        $(document).trigger('taxonomy_change.toggled', d.data);
+        $(document).trigger('taxonomy_change.enabled');
 
         setFocus(d, d.data.isEnabled());
     }
 
     function onToggled(callback) {
-        $(document).on('taxonomy_change.toggled', (evt, s) => callback(s));
+        $(document).on('taxonomy_change.enabled', () => callback());
     }
 
 
@@ -169,10 +169,14 @@ window.Viz = window.Viz || {};
 
     function saveState() { return Controls.SelectTaxonomy.saveState(); }
     function loadState(newState) {
-        Taxonomy.root.disable();
-        newState.enabled.map(Taxonomy.fromKey).forEach(n => n.enable());
+        Taxonomy.setEnabled(newState.enabled);
+        $(document).trigger('taxonomy_change.enabled', loadState);
     }
-    function onChangeState(callback) { onToggled(s => callback(saveState())); }
+    function onChangeState(callback) {
+        $(document).on('taxonomy_change.enabled', (evt, data) => {
+            if (data !== 'loadState') callback(saveState());
+        });
+    }
 
     Object.assign(exports, {
         init,

@@ -66,20 +66,22 @@ window.Controls = window.Controls || {};
     function saveState() {
         return {
             selection: selection.map(n => n.key()),
-            enabled: selection.filter(n => n.isEnabled()).map(n => n.key()),
+            enabled: Taxonomy.getEnabled().map(n => n.key()),
         };
 
     }
     function loadState(newState) {
-        $select.val(newState.selection).trigger('change', 'loadState');
-        Taxonomy.root.disable();
-        newState.enabled.map(Taxonomy.fromKey).forEach(n => n.enable());
+        $select.val(newState.selection);
+        Taxonomy.setEnabled(newState.enabled);
+
+        $select.trigger('change', 'loadState');
+        $(document).trigger('taxonomy_change.enabled', 'loadState');
     }
     function onChangeState(callback) {
         $select.change((evt, data) => {
             if (data !== 'loadState') callback(saveState());
         });
-        Viz.TaxonomyTree.onToggled(() => callback(saveState()))
+        Viz.TaxonomyTree.onChangeState(() => callback(saveState()))
     }
 
     function selectData() {
