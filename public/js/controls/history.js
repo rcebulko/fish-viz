@@ -1,7 +1,7 @@
 (function (History) {
     var components = {},
 
-        appState = Cookies.getJSON('appState') || {},
+        appState = loadState() || {},
         state = appState.state || {},
 
         history = appState.history || [],
@@ -21,8 +21,17 @@
     function undo() { shiftState(history, future); }
     function redo() { shiftState(future, history); }
 
+    function loadState() {
+        return {
+            state: JSON.parse(localStorage.state || false),
+            history: JSON.parse(sessionStorage.history || false),
+            future: JSON.parse(sessionStorage.future || false),
+        }
+    }
     function saveState() {
-        Cookies.set('appState', { state, history, future });
+        localStorage.state = JSON.stringify(state);
+        sessionStorage.history = JSON.stringify(history);
+        sessionStorage.future = JSON.stringify(future);
     }
 
     function prune() {
