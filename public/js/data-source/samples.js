@@ -83,8 +83,7 @@
         ));
 
         return Promise.all(promises)
-            .then(ss => ss.reduce((acc, arr) => acc.concat(arr), []))
-            .then(samples => { console.log(samples); return samples; })
+            .then(ss => ss.reduce((acc, arr) => acc.concat(arr), []));
     }
 
     function getOuterSegments(newRange, cachedRange) {

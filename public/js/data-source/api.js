@@ -9,11 +9,8 @@
 
     // fetch samples with arbitrary filters
     function fetchSamples(filterOpts) {
-        return $.get(API_PATH + 'sample',
-            Object.assign({ limit: 1000 }, filterOpts),
-        ).then(samples => {
-            return samples.length ? samples : []
-        });
+        return $.get(API_PATH + 'sample', filterOpts)
+            .then(samples => samples.length ? samples : []);
     }
 
     function fetchSpeciesSamples(speciesCode, filterOpts, callback) {
