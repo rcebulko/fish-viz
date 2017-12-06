@@ -25,6 +25,11 @@
         return initPromise;
     }
 
+    function fromKey(key) {
+        var type_id = key.split('__');
+        return Taxonomy[type_id[0]][type_id[1]];
+    }
+
     function pickColors(seed, variation) {
         var colors = seed.distance(0.4)
             .scheme('analogic')
@@ -41,13 +46,14 @@
                 c.slice(2, 4) === c.slice(4, 6)) );
     }
 
+    function getEnabled() { return enabled; }
+    function setEnabled(enabled) {
+        root.disable();
+        enabled.map(Taxonomy.fromKey).forEach(n => n.enable());
+        cullEnabled();
+    }
     function cullEnabled() {
         enabled.slice(0, -5).forEach(s => s.disable());
-    }
-
-    function fromKey(key) {
-        var type_id = key.split('__');
-        return Taxonomy[type_id[0]][type_id[1]];
     }
 
 
@@ -350,6 +356,8 @@
         families: Family.prototype.instances,
         fromKey,
 
+        getEnabled,
+        setEnabled,
         cullEnabled,
     });
 }(window.Taxonomy = window.Taxonomy || {}));
