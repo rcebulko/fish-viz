@@ -64,7 +64,14 @@
                     tip.hide.call(this, d);
                     unfocus.call(this, d);
                 })
-                .on('click', toggle)
+                .on('mousedown', d => {
+                    if (d3.event.which === 3) { // right click
+                        deselect(d);
+                    } else {
+                        toggle(d);
+                    }
+                })
+                .on('contextmenu', () => d3.event.preventDefault())
             .merge(rects)
                 .transition()
                     .duration(transitionDuration)
@@ -131,6 +138,13 @@
 
         SelectTaxonomy.loadValue()
         setFocus(d, d.data.isEnabled());
+    }
+
+    function deselect(d, evt) {
+        var val = SelectTaxonomy.getValue();
+        d.data.deselect();
+        val.selected = val.selected.filter(n => n.isSelected());
+        SelectTaxonomy.setValue(val);
     }
 
 
