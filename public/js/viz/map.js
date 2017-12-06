@@ -52,7 +52,6 @@
                         ['Length', sample.length.map(len => len.toFixed(2)).join(' - ')],
                         ['Avg. Length', sample.avgLength.toFixed(2)],
                         ['Number', sample.number.map(n => n.toFixed(1)).join(' - ')],
-                        ['Avg. Number', sample.avgNumber.toFixed(1)],
                         ['Total Number', sample.totalNumber.toFixed(0)],
                         ['Protected', fmtProtected(sample.protected)],
                     ].map(lbl_val => '<b>' + lbl_val.join('</b>: ')).join('<br>'),
@@ -179,13 +178,13 @@
     }
 
     function initZoom() {
-        google.maps.event.addListener(map, 'bounds_changed',
+        google.maps.event.addListener(map, 'zoom_changed',
             debounce(() => draw(), 250));
     }
 
 
     function draw() {
-        return Samples.getSamples().then(drawSamples);
+        return Samples.getSamples().then(drawSamples, () => null);
     }
 
     function nearBounds() {
@@ -210,11 +209,16 @@
 
     // sample pruning and merging
     function geoPruneSamples(samples) {
-        var viewBounds = nearBounds(),
+        var viewBounds = map.getBounds(),
             edges = viewBounds.toJSON(),
 
             height = edges.north - edges.south,
             width = edges.east - edges.west,
+
+            expandedBounds = new google.maps.LatLngBounds(
+                { lat: edges.south - height, lng: edges.west - width },
+                { lat: edges.north + height, lng: edges.east + width },
+            ),
 
             pxPerBucket = 20,
 
@@ -222,22 +226,21 @@
             horizRes = 3 * mapNode.offsetWidth / pxPerBucket,
 
             buckets = {},
-            getBucket = (val, min, max, res) =>
-                Math.floor(res * (val - min) / (max - min)),
+            getBucket = (val, min, range, res) =>
+                Math.floor(res * (val - min - range) / (3 * range)),
             getVertBucket = val =>
-                getBucket(val, edges.south, edges.north, vertRes),
+                getBucket(val, edges.south, height, vertRes),
             getHorizBucket = val =>
-                getBucket(val, edges.west, edges.east, horizRes),
+                getBucket(val, edges.west, width, horizRes),
             bucketKey = (vert, horiz) => vert + '__' + horiz,
             sampleKey = sample => bucketKey(
                 getVertBucket(sample.latitude),
                 getHorizBucket(sample.longitude)),
             i, key;
 
-        console.log('Starting with %d samples', samples.length);
 
         samples = samples.filter(s =>
-                viewBounds.contains({ lat: s.latitude, lng: s.longitude }))
+                expandedBounds.contains({ lat: s.latitude, lng: s.longitude }))
 
         for (i = 0; i < samples.length; ++i) {
             key = sampleKey(samples[i]);
@@ -307,13 +310,14 @@
             length: [s.length, s.length],
             avgLength: [s.length],
             number: [s.number, s.number],
-            avgNumber: s.number,
             totalNumber: s.number,
         });
     }
 
 
     function drawSamples(samples) {
+        if (!samples) return;
+
         var samples = geoPruneSamples(samples),
             nodes = overlay.children().data(samples, d => d.id),
             newNodes = nodes.enter().append('svg');
