@@ -41,15 +41,30 @@ window.Controls = window.Controls || {};
             formatTimestamp(range[0]),
             formatTimestamp(range[1]));
     }
-    function onChange(callback) {
-        slider.on('set', () => callback(get()));
-    }
+
 
     function get() { return range; }
     function set(newDateRange) {
         slider.set(newDateRange.map(d => new Date(d)));
     }
+    function onChange(callback) { slider.on('set', () => callback(get())); }
+
+    function onChangeState(callback) {
+        slider.on('change', () => callback(get()));
+    }
 
 
-    Object.assign(exports, { init, onChange, get, set, formatTimestamp });
+    Object.assign(exports, {
+        init,
+
+        get,
+        set,
+        onChange,
+
+        saveState: get,
+        loadState: set,
+        onChangeState,
+
+        formatTimestamp,
+    });
 }(window.Controls.DateRange = {}));

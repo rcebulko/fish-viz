@@ -28,11 +28,23 @@ window.Controls = window.Controls || {};
 
         console.log('Set region to %s', region);
     }
-    function onChange(callback) { $region.change(() => callback(get())); }
 
     function get() { return region; }
     function set(newRegion) { $region.val(newRegion).trigger('change'); }
+    function onChange(callback) { $region.change(() => callback(get())); }
+
+    function loadState(newRegion) { $region.val(newRegion); }
 
 
-    Object.assign(exports, { init, onChange, get, set });
+    Object.assign(exports, {
+        init,
+
+        get,
+        set,
+        onChange,
+
+        saveState: get,
+        loadState: set,
+        onChangeState: onChange,
+    });
 }(window.Controls.Region = {}));

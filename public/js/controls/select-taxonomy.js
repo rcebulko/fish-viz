@@ -58,12 +58,29 @@ window.Controls = window.Controls || {};
         selection = newSelection;
         Taxonomy.cullEnabled();
     }
-    function onChange(callback) {
-        $select.change(() => callback(selection));
-    }
 
     function get() { return selection; }
     function set(newSelection) { $select.val(newSelection).trigger('change'); }
+    function onChange(callback) { $select.change(() => callback(selection)); }
+
+    function saveState() {
+        return {
+            selection: selection.map(n => n.key()),
+            enabled: selection.filter(n => n.isEnabled()).map(n => n.key()),
+        };
+
+    }
+    function loadState(newState) {
+        $select.val(newState.selection).trigger('change', 'loadState');
+        Taxonomy.root.disable();
+        newState.enabled.map(Taxonomy.fromKey).forEach(n => n.enable());
+    }
+    function onChangeState(callback) {
+        $select.change((evt, data) => {
+            if (data !== 'loadState') callback(saveState());
+        });
+        Viz.TaxonomyTree.onToggled(() => callback(saveState()))
+    }
 
     function selectData() {
         return ['species', 'genuses', 'families'].map(type => {
@@ -78,5 +95,15 @@ window.Controls = window.Controls || {};
     }
 
 
-    Object.assign(exports, { init, onChange, get, set })
+    Object.assign(exports, {
+        init,
+
+        get,
+        set,
+        onChange,
+
+        saveState,
+        loadState,
+        onChangeState,
+    })
 }(window.Controls.SelectTaxonomy = window.Controls.SelectTaxonomy || {}));

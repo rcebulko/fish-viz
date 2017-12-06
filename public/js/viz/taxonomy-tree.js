@@ -31,6 +31,9 @@ window.Viz = window.Viz || {};
         onToggled(restyle);
         onFocused(restyle);
 
+        Controls.History.onUndo(undoComponent => {
+            if (undoComponent === 'taxonomy') draw();
+        });
         Controls.SelectTaxonomy.onChange(draw);
         draw();
     }
@@ -148,7 +151,7 @@ window.Viz = window.Viz || {};
 
 
     function setFocus(d, state) {
-        if (!d.data.isEnabled()) return;
+        if (state && !d.data.isEnabled()) return;
 
         inFocus = state;
 
@@ -163,5 +166,24 @@ window.Viz = window.Viz || {};
         $(document).on('taxonomy_change.focused', (evt, s) => callback(s));
     }
 
-    Object.assign(exports, { init, draw, onToggled, onFocused });
+
+    function saveState() { return Controls.SelectTaxonomy.saveState(); }
+    function loadState(newState) {
+        Taxonomy.root.disable();
+        newState.enabled.map(Taxonomy.fromKey).forEach(n => n.enable());
+    }
+    function onChangeState(callback) { onToggled(s => callback(saveState())); }
+
+    Object.assign(exports, {
+        init,
+
+        onToggled,
+        onFocused,
+
+        saveState,
+        loadState,
+        onChangeState,
+
+        draw,
+    });
 }(window.Viz.TaxonomyTree = window.Viz.TaxonomyTree || {}));

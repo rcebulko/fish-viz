@@ -17,11 +17,12 @@
         Controls.DateRange.init();
         Controls.Region.init();
         return Controls.SelectTaxonomy.init()
-            .then(loadSettings)
-            .then(() => {
-                onChange(saveSettings);
-                Viz.TaxonomyTree.onToggled(saveSettings);
-            });
+            .then(Controls.History.init)
+            // .then(loadSettings)
+            // .then(() => {
+            //     onChange(saveSettings);
+            //     Viz.TaxonomyTree.onToggled(saveSettings);
+            // });
     }
 
     function enableShowHide() {
