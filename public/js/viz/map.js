@@ -74,17 +74,19 @@
             }
         }),
 
-    map, mapNode,bounds, overlay;
+    $mapWrapper = $(),
+    map, mapNode,bounds, overlay,
+
+    loading = state => $mapWrapper.toggleClass('loading', state);
 
 
     function init() {
-        var settings = Cookies.getJSON('map-settings') || {};
-
         return googlePromise
             .then(() => {
                 console.info('Initializing map visualization');
 
 
+                $mapWrapper = $('.map-wrapper');
                 mapNode = d3.select('.map-view').node();
                 map = new google.maps.Map(mapNode, {
                     zoom: 9,
@@ -99,10 +101,13 @@
                 initBounds();
                 initOverlay();
                 initPan();
-                initZoom();
+                setTimeout(initZoom, 5000);
 
                 Controls.Region.onChanged(fitRegion);
-                Samples.onChanged(drawSamples);
+                Samples.onData(samples => {
+                    loading(true);
+                    drawSamples(samples);
+                });
                 TaxonomyTree.onFocused(restyle);
             }).then(draw)
                 .then(initHistory);
@@ -184,7 +189,9 @@
 
 
     function draw() {
-        return Samples.getSamples().then(drawSamples, () => null);
+        loading(true);
+        return Samples.getSamples(drawSamples)
+            .then(drawSamples, () => null);
     }
 
     function nearBounds() {
@@ -220,7 +227,7 @@
                 { lat: edges.north + height, lng: edges.east + width },
             ),
 
-            pxPerBucket = 20,
+            pxPerBucket = 40,
 
             vertRes = 3 * mapNode.offsetHeight / pxPerBucket,
             horizRes = 3 * mapNode.offsetWidth / pxPerBucket,
@@ -315,12 +322,13 @@
     }
 
 
-    function drawSamples(samples) {
+    function drawSamples(samples, partial) {
         if (!samples) return;
 
         var samples = geoPruneSamples(samples),
             nodes = overlay.children().data(samples, d => d.id),
-            newNodes = nodes.enter().append('svg');
+            newNodes = nodes.enter().append('svg'),
+            complete = partial !== 'partial';
 
         console.debug('Drawing %d samples', samples.length);
 
@@ -343,6 +351,8 @@
                 .on('mouseout', tip.hide)
 
         restyle();
+
+        if (complete) loading(false);
     }
 
     function restyle(inFocus) {

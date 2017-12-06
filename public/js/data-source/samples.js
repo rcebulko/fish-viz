@@ -4,50 +4,62 @@
         // cache[region][species.id()] = { dateRange: [...], samples: [...] }
         globalCache = {}
 
-        dateFmt = Controls.DateRange.format;
+        dateFmt = Controls.DateRange.format
+
+        activeRequest = 0,
+        lastPromise = null,
+        checkRequest = request => {
+            if (request !== activeRequest) throw Error('Inactive request');
+        };
 
 
     function init() {
         console.info('Initializing data source');
-        Controls.onChanged(() => getSamples().then(trigger));
+        Controls.onChanged(() => {
+            lastPromise = null;
+            getSamples(trigger).then(trigger);
+        });
     }
 
-    function getSamples() {
-        var region = Controls.Region.getValue(),
-            dateRange = Controls.DateRange.getValue(),
-            species = Controls.SelectTaxonomy.getValue().enabled;
+    function trigger(samples, partial) {
+        listeners.forEach(cb => cb(samples, partial));
+    }
+    function onData(callback) { listeners.push(callback); }
 
-        return Promise.all(
-            species.map(s => getSpeciesSamples(s, region, dateRange)))
-            .then(sampleSets => {
-                var samples = sampleSets.reduce((acc, arr) => acc.concat(arr), []);
-                console.debug('Collected a total of %d samples', samples.length);
 
+    function getSamples(onData) {
+        if (lastPromise !== null) {
+            return lastPromise.then(samples => {
+                console.debug('Re-serving %d samples from previous request',
+                    samples.length);
                 return samples;
             });
-    }
-
-    function onChanged(callback) { listeners.push(callback); }
-
-
-    function preprocessSample(sample, species) {
-        sample.date = new Date(sample.date);
-        sample.species = species;
-        return sample;
-    }
-
-    function getCache(species, region) {
-        if (typeof globalCache[region] === 'undefined') globalCache[region] = {};
-        cache = globalCache[region];
-
-        if (typeof cache[species.id()] === 'undefined') {
-            cache[species.id()] = { dateRange: [], data: [] };
         }
 
-        return cache[species.id()];
+        var region = Controls.Region.getValue(),
+            dateRange = Controls.DateRange.getValue(),
+            species = Controls.SelectTaxonomy.getValue().enabled,
+            data = [],
+            onData = throttle(onData || (() => null), 500),
+            request = ++activeRequest;
+
+        return lastPromise = Promise.all(
+            species.map(s =>
+                getSpeciesSamples(s, region, dateRange, request,
+                    partialData => onData(data = data.concat(partialData), 'partial')))
+        ).then(sampleSets => {
+            checkRequest(request);
+
+            var samples = sampleSets.reduce((acc, arr) => acc.concat(arr), []);
+            console.debug('Collected a total of %d samples', samples.length);
+            console.debug(data.length);
+
+            return samples;
+        }, () => console.debug('Ignoring responses to old request %d', request));
     }
 
-    function getSpeciesSamples(species, region, dateRange) {
+
+    function getSpeciesSamples(species, region, dateRange, request, onData) {
         var cache = getCache(species, region),
             segments,
             promises = [],
@@ -77,15 +89,30 @@
                 .then(samples => {
                     cache.dateRange = mergeSegments(cache.dateRange, dr);
                     cache.data = cache.data.concat(samples);
+                    checkRequest(request);
+                    onData(cache.data);
 
                     return samples;
                 })
         ));
 
-        return Promise.all(promises)
-            .then(ss => ss.reduce((acc, arr) => acc.concat(arr), []));
+        return Promise.all(promises).then(ss =>
+            ss.reduce((acc, arr) => acc.concat(arr), []));
     }
 
+    function getCache(species, region) {
+        if (typeof globalCache[region] === 'undefined') globalCache[region] = {};
+        cache = globalCache[region];
+
+        if (typeof cache[species.id()] === 'undefined') {
+            cache[species.id()] = { dateRange: [], data: [] };
+        }
+
+        return cache[species.id()];
+    }
+
+    // given a new query range and the cached range, determine what segments
+    // (if any) are needed to cover the difference
     function getOuterSegments(newRange, cachedRange) {
         var segments = [];
 
@@ -99,12 +126,15 @@
         return segments;
     }
 
+    // merge two date ranges into one
     function mergeSegments(seg1, seg2) {
         if (seg1.length === 0) return seg2;
         if (seg2.length === 0) return seg1;
         return [Math.min(seg1[0], seg2[0]), Math.max(seg1[1],seg2[1])];
     }
 
+
+    // request a set of samples explicitly from the API
     function fetchSpeciesSamples(species, region, dateRange) {
         return API.fetchSpeciesSamples(species.id(), {
             region,
@@ -118,10 +148,13 @@
         });
     }
 
-    function trigger(samples) {
-        listeners.forEach(cb => cb(samples));
+    // convert serialized fields into species and date objects
+    function preprocessSample(sample, species) {
+        sample.date = new Date(sample.date);
+        sample.species = species;
+        return sample;
     }
 
 
-    Object.assign(Samples, { getSamples, onChanged, init });
+    Object.assign(Samples, { getSamples, onData, init });
 }(window.Samples = {}, window.Taxonomy, window.API, window.Controls));
