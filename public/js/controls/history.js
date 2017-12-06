@@ -48,32 +48,17 @@ window.Controls = window.Controls || {};
         state[name] = components[name].saveState();
     }
 
-    function undo() {
-        console.debug('Popped history state:', shiftState(history, future));
-        console.debug('New future:', future);
-
-    }
-
-    function redo() {
-        console.debug('Popped future state:', shiftState(future, history));
-        console.debug('New history:', history);
-
-    }
-
+    function undo() { shiftState(history, future); }
+    function redo() { shiftState(future, history); }
 
     function initComponent(name) {
         var component = components[name];
 
         component.onChangeState(newVal => {
-            console.debug('Pushing history state:', [name, state[name]]);
-
             future = [];
             pushState(history, name);
-            // history.push([name, state[name]]);
-            // state[name] = components[name].saveState();
-
-            console.debug('New history state:', Object.assign({}, state));
         });
+
         state[name] = components[name].saveState();
     }
 
@@ -94,9 +79,5 @@ window.Controls = window.Controls || {};
         redo,
 
         onChangeState,
-
-        getHistory: () => history,
-        getFuture: () => future,
-        getStates: () => history.concat([state]).concat(future),
     });
 }(window.Controls.History = window.Controls.History || {}))
