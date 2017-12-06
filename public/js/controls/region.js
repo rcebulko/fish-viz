@@ -13,7 +13,7 @@
 
     // region control initialization
     function Region() {}
-    Region.prototype = new Controls.Control('Region', function () {
+    Controls.register(Region, function () {
         this.$region = $('.geo-region').select2({
             minimumResultsForSearch: -1,
             data: Object.entries(regions).map(entry => {
@@ -40,4 +40,4 @@
 
 
     Controls.Region = new Region();
-}(window.Controls = window.Controls || {}));
+}(window.Controls));

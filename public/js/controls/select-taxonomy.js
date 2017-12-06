@@ -31,8 +31,10 @@
                 };
             });
 
+
+    // taxonomy selection initialization
     function SelectTaxonomy() {}
-    SelectTaxonomy.prototype = new Controls.Control('Taxonomy', function () {
+    Controls.register(SelectTaxonomy, function () {
         this.$select = $('.taxonomy-select');
 
         return Taxonomy.init()
@@ -117,4 +119,4 @@
 
 
     Controls.SelectTaxonomy = new SelectTaxonomy();
-}(window.Controls = window.Controls || {}));
+}(window.Controls));

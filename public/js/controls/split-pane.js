@@ -1,16 +1,20 @@
 // Dependencies:
 // - jQuery
 // - SplitPane
+// - Controls.Control
 
-(function (exports) {
-    function init() {
-        console.info('Initializing split panels');
+(function (Controls) {
+    function SplitPane() {}
+    SplitPane.prototype.init = function (initSizes) {
+        console.info('Initializing SplitPane control');
 
         $('.split-pane').splitPane();
-        $('.outer-pane').splitPane('firstComponentSize', 100);
-        $('.nested-pane').splitPane('firstComponentSize', 250);
-    }
+        $('.outer-pane').splitPane('firstComponentSize', initSizes[0]);
+        $('.nested-pane').splitPane('firstComponentSize', initSizes[1]);
+
+        return Promise.all([]);
+    };
 
 
-    Object.assign(exports, { init });
-}(window.SplitPane = window.SplitPane || {}));
+    Controls.SplitPane = new SplitPane();
+}(window.Controls = window.Controls || {}));

@@ -1,31 +1,21 @@
 // Dependencies:
 // - jQuery
-// - JS Cookie
-// - controls/date-range
-// - - noUiSlider
-// - controls/region
-// - controls/select-taxonomy
-// - - Select2
-// - - Taxonomy
+// - Controls.Control
 
-(function (exports) {
+(function (Controls) {
     function init() {
         console.info('Initializing controls');
 
         enableShowHide();
 
 
-        Controls.SplitPane.init();
-        Controls.Region.init('FLA KEYS')
-            .then(() => Controls.DateRange.init([2013, 2016]
-                .map(year => new Date('' + year).getTime())))
-        // return Controls.SelectTaxonomy.init()
-        //     .then(Controls.History.init)
-            // .then(loadSettings)
-            // .then(() => {
-            //     onChange(saveSettings);
-            //     Viz.TaxonomyTree.onToggled(saveSettings);
-            // });
+        return Promise.all([
+            Controls.SplitPane.init([100, 250]),
+            Controls.Region.init('FLA KEYS'),
+            Controls.DateRange.init(
+                [2013, 2016].map(d => new Date('' + d).getTime())),
+            Controls.SelectTaxonomy.init({ selected: [], enabled: [] }),
+        ]);
     }
 
     function enableShowHide() {
@@ -79,5 +69,5 @@
     }
 
 
-    Object.assign(exports, { init, onChange, get })
+    Object.assign(Controls, { init, onChange, get })
 }(window.Controls = window.Controls || {}));

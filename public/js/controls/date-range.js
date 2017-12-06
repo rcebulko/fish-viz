@@ -16,7 +16,7 @@
 
     // date range control initialization
     function DateRange() {}
-    DateRange.prototype = new Controls.Control('DateRange', function (initRange) {
+    Controls.register(DateRange, function (initRange) {
         this.slider = noUiSlider.create(document.querySelector('.date-range'), {
             range: { min: timestamp('1999'), max: timestamp('2018') },
             step: year / 12, // step by month (roughly)

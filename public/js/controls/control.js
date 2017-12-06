@@ -117,5 +117,9 @@
     };
 
 
-    Controls.Control = Control;
+    // allow controls to register with the central module
+    Controls.register = function register(Constructor, initComponent) {
+        Constructor.prototype = new Control(Constructor.name, initComponent);
+        Controls[Constructor.name] = new Constructor();
+    };
 }(window.Controls = window.Controls || {}));
