@@ -146,15 +146,20 @@ body {
 
     padding: 3px;
 
-    border-right: 1px solid #CCC;
+    border: 1px solid #CCC;
 
     cursor: pointer;
+    opacity: 0.8;
 
     box-sizing: border-box;
 }
+.control-panel-submenu > *:active,
+.control-panel-submenu > .active {
+    border: 1px solid cadetblue;
+    opacity: 1;
+}
 .control-panel-submenu > .active {
     background-color: #FFF;
-    border: 1px solid cadetblue;
 }
 .control-panel.hidden {
     height: 25px;
