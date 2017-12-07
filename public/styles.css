@@ -217,13 +217,16 @@ body {
     stroke: #FFF !important;
     stroke-width: 3 !important;
 }
+.map-overlay.lasso-active .sample.lasso-selected:not(.lasso-possible) circle {
+    stroke: #000 !important;
+}
 @keyframes dash {
     from { stroke-dashoffset: 0; }
     to { stroke-dashoffset: 1000; }
 }
 .sample.lasso-selected  circle {
     stroke-dasharray: 5;
-    animation: dash 60s linear;
+    animation: dash 60s linear infinite;
 }
 
 .map-overlay { position: absolute; }

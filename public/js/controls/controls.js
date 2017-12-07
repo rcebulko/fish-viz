@@ -8,6 +8,7 @@
         return Promise.all([
             Controls.SplitPane.init([100, 250]),
             Controls.MouseAction.init(),
+            Controls.LassoSelect.init(),
             Controls.Region.init('FLA KEYS'),
             Controls.DateRange.init(
                 [2013, 2016].map(d => new Date('' + d).getTime())),

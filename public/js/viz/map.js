@@ -97,30 +97,12 @@
                     minZoom: 8,
                     maxZoom: 14,
                 });
-                lasso = d3.lasso()
-                    .targetArea(d3.select('.lasso-overlay'))
-                    .on('start', () => $('.map-overlay').addClass('lasso-active'))
-                    .on('draw', () => {
-                        lasso.possibleItems()
-                            .attr('class', 'sample lasso-possible')
-                        lasso.notPossibleItems()
-                            .attr('class', 'sample')
-                    })
-                    .on('end', () => {
-                        $('.map-overlay').removeClass('lasso-active');
-                        lasso.selectedItems()
-                            .attr('opacity', 1)
-                            .attr('class', 'sample lasso-selected')
-                        lasso.notSelectedItems()
-                            .attr('opacity', 0.5)
-                            .attr('class', 'sample')
-                    });
-                d3.select('.lasso-overlay').call(lasso)
 
                 initBounds();
                 initOverlay();
                 initPan();
                 setTimeout(initZoom, 5000);
+                initLasso();
 
                 Controls.Region.onChanged(fitRegion);
                 Samples.onData(samples => {
@@ -207,6 +189,44 @@
     function initZoom() {
         google.maps.event.addListener(map, 'zoom_changed',
             debounce(() => draw(), 250));
+    }
+
+    function initLasso() {
+        var baseClass = 'sample',
+            possibleClass = 'lasso-possible',
+            selectedClass = 'lasso-selected',
+
+            willSelect = Controls.LassoSelect.willSelect,
+            // willSelectClass = (state, yesClass) => {
+            //     return d => willSelect(d.id, state) ? yesClass : baseClass;
+            // },
+            willSelectClass = state => { return d => willSelect(d.id, state); };
+
+        lasso = d3.lasso()
+            .targetArea(d3.select('.lasso-overlay'))
+            .on('start', () => $('.map-overlay').addClass('lasso-active'))
+            .on('draw', () => {
+                lasso.possibleItems()
+                    .classed(possibleClass, willSelectClass(true))
+                lasso.notPossibleItems()
+                    .classed(possibleClass, willSelectClass(false))
+            })
+            .on('end', () => {
+                $('.map-overlay').removeClass('lasso-active');
+
+                lasso.selectedItems()
+                    .classed(possibleClass, false)
+                    .classed(selectedClass, willSelectClass(true))
+                lasso.notSelectedItems()
+                    .classed(possibleClass, false)
+                    .classed(selectedClass, willSelectClass(false))
+
+                Controls.LassoSelect.setSelection(
+                    d3.selectAll('.lasso-selected')
+                        .data()
+                        .map(s => s.id));
+            });
+        d3.select('.lasso-overlay').call(lasso)
     }
 
 
@@ -313,7 +333,7 @@
         if (!s1.aggregated) s1 = aggregatedSingleton(s1);
 
         return {
-            id: s1.id,
+            id: s1.id + '-' + s2.id,
             count: s1.count + 1,
             aggregated: true,
             date: range('date'),
