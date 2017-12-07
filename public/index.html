@@ -31,25 +31,39 @@
                 <div class="split-pane fixed-left nested-pane">
                     <!-- Filters view -->
                     <div class="filters-wrapper split-pane-component full-height">
-                        <div id="filters" class='filters'></div>
+                        <div id="filters" class="filters"></div>
                     </div>
 
                     <div class="split-pane-divider vertical"></div>
 
                     <!-- Map view -->
                     <div class="map-wrapper split-pane-component">
-                        <div class="map-view"></div>
+                        <div class="map-view full-height full-width"></div>
+                        <svg class="lasso-overlay full-height full-width"></svg>
 
                         <div class="date-range-wrapper">
-                            <div class='date-range'></div>
+                            <div class="date-range"></div>
                         </div>
 
                         <!-- Controls and filter settings -->
                         <div class="control-panel">
                             <div class="control-panel-toolbar">
-                                <img class="control-panel-toggle" src="img/gear.png">
-                                <img class="control-panel-undo" src="img/undo.png">
-                                <img class="control-panel-redo" src="img/redo.png">
+                                <img class="control-panel-toggle" title="Toggle" src="img/gear.png">
+                                <img class="control-panel-undo" title="Undo" src="img/undo.png">
+                                <img class="control-panel-redo" title="Redo" src="img/redo.png">
+
+                                <div class="control-panel-submenu">
+                                    <img class="control-panel-pan" title="Pan" src="img/pan.png"><!--
+                                 --><img class="control-panel-lasso" title="Lasso" src="img/lasso.png">
+                                </div>
+
+                                <div class="control-panel-submenu">
+                                    <img class="control-panel-select-select" title="Select" src="img/selection/select.svg">
+                                    <img class="control-panel-select-add" title="Add" src="img/selection/add.svg">
+                                    <img class="control-panel-select-subtract" title="Subtract" src="img/selection/subtract.svg">
+                                    <img class="control-panel-select-intersect" title="Intersect" src="img/selection/intersect.svg">
+                                    <img class="control-panel-select-exclude" title="Exclude" src="img/selection/exclude.svg">
+                                </div>
                             </div>
 
                             <div class="control-panel-controls">
@@ -61,7 +75,7 @@
                                 <br>
                                 <br>
 
-                                <select class='taxonomy-select' multiple="multiple"></select>
+                                <select class="taxonomy-select" multiple="multiple"></select>
                             </div>
                         </div>
 
@@ -82,6 +96,7 @@
         <!-- D3 + extensions -->
         <script src="//d3js.org/d3.v4.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+        <script src="//cdn.jsdelivr.net/npm/d3-lasso@0.0.5/build/d3-lasso.js"></script>
         <!-- noUiSlider -->
         <script src="//cdnjs.cloudflare.com/ajax/libs/noUiSlider/10.1.0/nouislider.min.js"></script>
         <!-- Select2 -->
@@ -99,6 +114,7 @@
         <script src="js/controls/controls.js"></script>
         <script src="js/controls/control.js"></script>
         <script src="js/controls/split-pane.js"></script>
+        <script src="js/controls/mouse-action.js"></script>
         <script src="js/controls/region.js"></script>
         <script src="js/controls/date-range.js"></script>
         <script src="js/controls/select-taxonomy.js"></script>

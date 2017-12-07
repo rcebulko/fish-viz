@@ -131,10 +131,35 @@ body {
 
     cursor: pointer;
 }
+.control-panel-submenu {
+    width: auto;
+
+    border: 1px solid #CCC;
+    border-radius: 3px;
+
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: default;
+}
+.control-panel-submenu > * {
+    display: inline-block;
+    height: 100%;
+
+    padding: 3px;
+
+    border-right: 1px solid #CCC;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+}
+.control-panel-submenu > .active {
+    background-color: #FFF;
+    border: 1px solid cadetblue;
+}
 .control-panel.hidden {
+    height: 25px;
     bottom: auto;
     right: auto;
-    height: 25px;
 }
 
 .control-panel.hidden .control-panel-controls { display: none; }
@@ -165,10 +190,42 @@ body {
 }
 
 /* map view */
-.map-view {
-    height: 100%;
-    width: 100%;
+.lasso-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
 }
+.lasso-overlay.active { pointer-events: all; }
+.lasso-overlay circle.origin {
+    fill: #CCC;
+    r: 5;
+}
+.lasso-overlay path.drawn {
+    fill: rgba(255,255,255,0.5);
+    stroke: white;
+    stroke-dasharray: 10;
+    stroke-width: 2px;
+}
+
+.map-overlay.lasso-active .sample  circle {
+    opacity: 0.6 !important;
+}
+.sample.lasso-possible  circle,
+.sample.lasso-selected  circle {
+    opacity: 1 !important;
+    stroke: #FFF !important;
+    stroke-width: 3 !important;
+}
+@keyframes dash {
+    from { stroke-dashoffset: 0; }
+    to { stroke-dashoffset: 1000; }
+}
+.sample.lasso-selected  circle {
+    stroke-dasharray: 5;
+    animation: dash 60s linear;
+}
+
 .map-overlay { position: absolute; }
 .map-overlay svg {
     position: absolute;

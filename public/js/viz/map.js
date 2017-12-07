@@ -75,7 +75,7 @@
         }),
 
     $mapWrapper = $(),
-    map, mapNode,bounds, overlay,
+    map, mapNode, bounds, overlay, lasso,
 
     loading = state => $mapWrapper.toggleClass('loading', state);
 
@@ -97,6 +97,25 @@
                     minZoom: 8,
                     maxZoom: 14,
                 });
+                lasso = d3.lasso()
+                    .targetArea(d3.select('.lasso-overlay'))
+                    .on('start', () => $('.map-overlay').addClass('lasso-active'))
+                    .on('draw', () => {
+                        lasso.possibleItems()
+                            .attr('class', 'sample lasso-possible')
+                        lasso.notPossibleItems()
+                            .attr('class', 'sample')
+                    })
+                    .on('end', () => {
+                        $('.map-overlay').removeClass('lasso-active');
+                        lasso.selectedItems()
+                            .attr('opacity', 1)
+                            .attr('class', 'sample lasso-selected')
+                        lasso.notSelectedItems()
+                            .attr('opacity', 0.5)
+                            .attr('class', 'sample')
+                    });
+                d3.select('.lasso-overlay').call(lasso)
 
                 initBounds();
                 initOverlay();
@@ -330,7 +349,7 @@
 
         var samples = geoPruneSamples(samples),
             nodes = overlay.children().data(samples, d => d.id),
-            newNodes = nodes.enter().append('svg'),
+            newNodes = nodes.enter().append('svg').classed('sample', true),
             complete = partial !== 'partial';
 
         console.debug('Drawing %d samples', samples.length);
@@ -342,7 +361,7 @@
         newNodes.selectAll('svg')
             ._parents
             .map(d3.select)
-            .forEach(vis => vis.call(tip));
+            .forEach(viz => viz.call(tip));
 
         newNodes
             .append('circle')
@@ -354,6 +373,7 @@
             .merge(nodes)
                 .attr('r', normalizedRadiusFn(samples));
 
+        lasso.items(nodes.merge(newNodes));
         restyle();
 
         if (complete) loading(false);
