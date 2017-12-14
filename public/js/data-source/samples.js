@@ -1,10 +1,11 @@
-(function (Samples, Taxonomy, API, Controls) {
+(function (Samples, Taxonomy, API, Controls, Config) {
     var listeners = [],
 
+        speciesSampleCache = Config.speciesSampleCache,
         // cache[region][species.id()] = { dateRange: [...], samples: [...] }
-        globalCache = {}
+        globalCache = {},
 
-        dateFmt = Controls.DateRange.format
+        dateFmt = Controls.DateRange.format,
 
         activeRequest = 0,
         lastPromise = null,
@@ -67,7 +68,7 @@
             dateFilter = sample =>
                 sample.date >= dateRange[0] && sample.date <= dateRange[1];
 
-        if (cache.dateRange.length) {
+        if (speciesSampleCache && cache.dateRange.length) {
             promises.push(new Promise(resolve => {
                 var filtered = cache.data.filter(dateFilter);
                 console.debug(
@@ -86,10 +87,12 @@
         promises = promises.concat(segments.map(dr =>
             fetchSpeciesSamples(species, region, dr)
                 .then(samples => {
-                    cache.dateRange = mergeSegments(cache.dateRange, dr);
-                    cache.data = cache.data.concat(samples);
-                    checkRequest(request);
-                    onData(cache.data);
+                    if (speciesSampleCache) {
+                        cache.dateRange = mergeSegments(cache.dateRange, dr);
+                        cache.data = cache.data.concat(samples);
+                        checkRequest(request);
+                        onData(cache.data);
+                    }
 
                     return samples;
                 })
@@ -156,4 +159,8 @@
 
 
     Object.assign(Samples, { getSamples, onData, init });
-}(window.Samples = {}, window.Taxonomy, window.API, window.Controls));
+}(window.Samples = {},
+    window.Taxonomy,
+    window.API,
+    window.Controls,
+    window.Config));

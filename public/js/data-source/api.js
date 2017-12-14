@@ -1,5 +1,5 @@
-(function (API) {
-    var API_PATH = 'http://localhost:1337/api/';
+(function (API, Config) {
+    var API_PATH = Config.apiPath;
 
     // fetch taxonomy data
     function fetchSpecies() {
@@ -19,4 +19,4 @@
     }
 
     Object.assign(API, { fetchSpecies, fetchSamples, fetchSpeciesSamples });
-}(window.API = {}));
+}(window.API = {}, window.Config));

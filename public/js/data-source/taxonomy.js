@@ -1,9 +1,9 @@
-(function (Taxonomy, API) {
+(function (Taxonomy, API, Config) {
     var root,
         initPromise = null,
         scheme = new ColorScheme,
         enabled = [],
-        enabledLimit = 10;
+        enabledLimit = Config.maxEnabledSpecies;
 
 
     function init() {
@@ -363,4 +363,4 @@
         setEnabled,
         cullEnabled,
     });
-}(window.Taxonomy = {}, window.API));
+}(window.Taxonomy = {}, window.API, window.Config));
