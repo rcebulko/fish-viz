@@ -39,7 +39,6 @@ app.use('/api', sqlRouter(schema.Sample, {
                 'depth',
                 'length',
                 'number',
-                'protected',
                 'region',
             ],
             where: req.query,
