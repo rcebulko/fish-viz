@@ -52,7 +52,6 @@
 
             var samples = sampleSets.reduce((acc, arr) => acc.concat(arr), []);
             console.debug('Collected a total of %d samples', samples.length);
-            console.debug(data.length);
 
             return samples;
         }, () => console.debug('Ignoring responses to old request %d', request));

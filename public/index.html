@@ -30,8 +30,9 @@
             <div class="main-panel split-pane-component">
                 <div class="split-pane fixed-left nested-pane">
                     <!-- Filters view -->
-                    <div class="filters-wrapper split-pane-component full-height">
-                        <div id="filters" class="filters"></div>
+                    <div class="summary-wrapper split-pane-component full-height">
+                        <h3>Selected</h3>
+                        <div class="summaries"></div>
                     </div>
 
                     <div class="split-pane-divider vertical"></div>
@@ -66,6 +67,10 @@
                                  --><img class="control-panel-select-subtract" title="Subtract" src="img/selection/subtract.svg"><!--
                                  --><img class="control-panel-select-intersect" title="Intersect" src="img/selection/intersect.svg"><!--
                                  --><img class="control-panel-select-exclude" title="Exclude" src="img/selection/exclude.svg">
+                                </div>
+
+                                <div class="control-panel-submenu">
+                                    <img class="control-panel-heatmap-toggle" title="Heatmap" src="img/heatmap.png">
                                 </div>
                             </div>
 
@@ -122,6 +127,7 @@
         <script src="js/controls/region.js"></script>
         <script src="js/controls/date-range.js"></script>
         <script src="js/controls/select-taxonomy.js"></script>
+        <script src="js/controls/heat-map.js"></script>
         <script src="js/controls/history.js"></script>
 
         <!-- Samples data source -->
@@ -142,6 +148,6 @@
         </script>
 
         <!-- Google Maps -->
-        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkGbl_mDzoSqtyJI2FFRdc8erJoTtF99M&libraries=drawing&callback=Viz.Map.mapLoaded"></script>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBWuYcYykqy1QbIYTBS9pkziPjP1o2Qxqc&libraries=drawing,visualization&callback=Viz.Map.mapLoaded"></script>
     </body>
 </html>

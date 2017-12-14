@@ -98,6 +98,7 @@
                     maxZoom: 14,
                 });
 
+                Controls.HeatMap.init(map);
                 initBounds();
                 initOverlay();
                 initPan();
@@ -113,7 +114,6 @@
             }).then(draw)
                 .then(initHistory);
     }
-
 
     function initBounds() {
         Object.keys(regionBounds).forEach(function (region) {
@@ -197,9 +197,6 @@
             selectedClass = 'lasso-selected',
 
             willSelect = Controls.LassoSelect.willSelect,
-            // willSelectClass = (state, yesClass) => {
-            //     return d => willSelect(d.id, state) ? yesClass : baseClass;
-            // },
             willSelectClass = state => { return d => willSelect(d.id, state); };
 
         lasso = d3.lasso()
@@ -210,8 +207,13 @@
                     .classed(possibleClass, willSelectClass(true))
                 lasso.notPossibleItems()
                     .classed(possibleClass, willSelectClass(false))
+
+
+                updateSummaries(d3.selectAll('.lasso-possible').data());
             })
             .on('end', () => {
+                var selection;
+
                 $('.map-overlay').removeClass('lasso-active');
 
                 lasso.selectedItems()
@@ -221,12 +223,34 @@
                     .classed(possibleClass, false)
                     .classed(selectedClass, willSelectClass(false))
 
-                Controls.LassoSelect.setSelection(
-                    d3.selectAll('.lasso-selected')
-                        .data()
-                        .map(s => s.id));
+                selection = d3.selectAll('.lasso-selected').data();
+                Controls.LassoSelect.setSelection(selection.map(s => s.id));
+                updateSummaries(selection);
             });
         d3.select('.lasso-overlay').call(lasso)
+    }
+
+    function updateSummaries(selection) {
+        var counts = {};
+
+        selection.forEach(s => {
+            counts[s.species.id()] = (counts[s.species.id()] || 0) +
+                (s.aggregated ? s.count : 1)
+        });
+
+        $summs = $('.summaries');
+        if (Object.keys(counts).length) {
+            $summs.html('');
+            Object.keys(counts).forEach(id => {
+                $summs.append('<div class="summary"><i>' +
+                    Taxonomy.species[id] +
+                    ':</i> ' +
+                    counts[id] +
+                    '</div>')
+            });
+        } else {
+            $summs.html('No data selected')
+        }
     }
 
 
@@ -269,7 +293,7 @@
                 { lat: edges.north + height, lng: edges.east + width },
             ),
 
-            pxPerBucket = 30,
+            pxPerBucket = 40,
 
             vertRes = 3 * mapNode.offsetHeight / pxPerBucket,
             horizRes = 3 * mapNode.offsetWidth / pxPerBucket,
@@ -404,7 +428,7 @@
             minNum = Infinity,
             maxNum = -Infinity,
 
-            getNum = s => Math.sqrt(s.aggregated ? s.totalNumber : s.number),// Math.log(1.5),
+            getNum = s => Math.sqrt(s.aggregated ? s.avgLength : s.length),// Math.log(1.5),
 
             // scale values between 0 and 1
             znorm = val => (val - minNum) / (maxNum - minNum);
@@ -471,7 +495,12 @@
     }
 
 
-    Object.assign(Map, { init, mapLoaded })
+    Object.assign(Map, {
+        init,
+        mapLoaded,
+
+        getMap: () => map,
+    });
 }(window.Viz.Map = {},
     window.Viz.TaxonomyTree,
     window.Samples,
