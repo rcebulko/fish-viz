@@ -1,4 +1,4 @@
-(function (History) {
+(function (History, Config) {
     var components = {},
 
         appState = loadState() || {},
@@ -9,8 +9,8 @@
 
         listeners = [],
 
-        maxHistory = 20,
-        maxFuture = 20;
+        maxHistory = Config.maxHistory,
+        maxFuture = Config.maxFuture;
 
     function init(controls) {
         controls.forEach(register);
@@ -95,4 +95,4 @@
         onStateChanged,
         getStates: () => history.concat([state]).concat(future)
     });
-}(window.Controls.History = {}))
+}(window.Controls.History = {}, window.Config))
