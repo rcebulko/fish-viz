@@ -49,11 +49,14 @@
 
                 Controls.Region.onChanged(fitRegion);
                 Samples.onNew(drawNewSamples);
-                Samples.onUpdate(() => loading(false));
+                Samples.onUpdate(results => {
+                    drawNewSamples(results);
+                    loading(false)
+                });
                 TaxonomyTree.onFocused(restyleFocus);
             }).then(() => {
                 loading(true);
-                Samples.getSamples();
+                Samples.getSamples(map.getZoom());
             }).then(initHistory);
     }
 
@@ -124,17 +127,13 @@
             }
         });
 
-        google.maps.event.addListener(map, 'center_changed',
-            throttle(() => overlay.draw(), 1000));
+        google.maps.event.addListener(map, 'center_changed', throttle(() =>
+            Samples.getSamples(), 250));
     }
 
     function initZoom() {
         google.maps.event.addListener(map, 'zoom_changed', debounce(() =>
-            Samples.getSamples().then(results => {
-                results.first = true;
-                results.samples = geoPruneSamples(results.samples);
-                drawNewSamples(results);
-            }), 250));
+            Samples.getSamples(map.getZoom()), 250));
     }
 
     function initLasso() {
@@ -203,8 +202,6 @@
     // sample pruning and merging
     function geoPruneSamples(samples) {
         var view = map.getBounds().toJSON(),
-            edges = bounds.toJSON(),
-            zoom = map.getZoom(),
 
             height = view.north - view.south,
             width = view.east - view.west,
@@ -213,59 +210,10 @@
                 { lat: view.south - height, lng: view.west - width },
                 { lat: view.north + height, lng: view.east + width },
             ),
-
-            magic = 100,
-            pxPerBucket = 40,
-
-            vRange = height,//edges.south - edges.north,
-            hRange = width,//edges.west - edges.east,
-
-            vRes = mapNode.offsetHeight / pxPerBucket,
-            hRes = mapNode.offsetWidth / pxPerBucket,
-
-            buckets = {},
-            getBucket = (val, min, range, res) =>
-                Math.round(res * (val - min) / range),
-            getVertBucket = val =>
-                getBucket(val, edges.south, vRange, vRes),
-            getHorizBucket = val =>
-                getBucket(val, edges.west, hRange, hRes),
-            bucketKey = (vert, horiz) => vert + '__' + horiz,
-            sampleKey = sample => bucketKey(
-                getVertBucket(sample.latitude),
-                getHorizBucket(sample.longitude)),
             i, key;
 
-        samples = samples.filter(s =>
-                expandedBounds.contains({ lat: s.latitude, lng: s.longitude }))
-
-        for (i = 0; i < samples.length; ++i) {
-            key = samples[i].bucket(zoom).join('__');
-            if (typeof buckets[key] === 'undefined') buckets[key] = [];
-            buckets[key].push(samples[i]);
-        }
-
-        return Object.values(buckets)
-            .map(mergeSampleBucket)
-            .reduce((acc, arr) => acc.concat(arr), []);
-    }
-
-    function mergeSampleBucket(bucket) {
-        var samples = {},
-            i, sample, id;
-
-        for (i = 0; i < bucket.length; ++i) {
-            sample = bucket[i];
-            id = sample.species.id();
-
-            if (typeof samples[id] === 'undefined') {
-                samples[id] = sample;
-            } else {
-                samples[id] = sample.merge(samples[id]);
-            }
-        }
-
-        return Object.values(samples);
+        return samples.filter(s =>
+                expandedBounds.contains({ lat: s.latitude, lng: s.longitude }));
     }
 
     function drawNewSamples(results) {
@@ -276,7 +224,7 @@
         loading(true);
         console.debug('Drawing %d new samples', samples.length);
 
-        if (results.first) nodes.exit().remove();
+        nodes.exit().remove();
 
         drawNewNodes(newNodes);
         lasso.items(nodes.merge(newNodes));

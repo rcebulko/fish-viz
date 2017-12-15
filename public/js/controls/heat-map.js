@@ -35,7 +35,7 @@
         });
 
 
-        return initHeatMap(map);
+        // return initHeatMap(map);
     }
 
     function initHeatMap(map) {

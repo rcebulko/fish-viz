@@ -8,6 +8,8 @@
         dateFmt = Controls.DateRange.format,
 
         lastPromise = null,
+        lastAggPromise = null,
+        lastZoom = null,
 
         activeRequest = 0,
         checkRequest = request => {
@@ -19,8 +21,8 @@
         console.info('Initializing data source');
 
         Controls.onChanged(() => {
-            lastPromise = null;
-            getSamples();
+            lastPromise = lastAggPromise = null;
+            getAggregatedSamples();
         });
     }
 
@@ -45,7 +47,87 @@
     }
 
 
-    function getSamples() {
+    function getAggregatedSamples(zoom) {
+        var buckets = {},
+            numAggSamples = 0,
+            zoom = zoom || lastZoom,
+
+            bucketResults = results => {
+                var samples = results.samples,
+                    numSamples = samples.length,
+                    prevNumAgg = numAggSamples,
+                    keys = [],
+                    i, key;
+
+                for (i = 0; i < samples.length; ++i) {
+                    key = samples[i].bucket(zoom).join('__');
+                    keys.push(key);
+                    if (typeof buckets[key] === 'undefined') buckets[key] = [];
+                    buckets[key].push(samples[i]);
+                };
+
+                keys.forEach(key =>
+                    buckets[key] = mergeSampleBucket(buckets[key]));
+
+                samples = aggSamples();
+                numAggSamples = samples.length;
+
+                console.debug('Agggregated %d new samples; %d aggregated samples remain',
+                    samples.length, numAggSamples);
+
+                return samples;
+            },
+
+            aggSamples = () => Object.values(buckets)
+                .reduce((acc, arr) => acc.concat(arr), []);
+
+        if (lastAggPromise !== null && lastZoom === zoom) {
+            lastAggPromise.then(results =>
+                console.debug('Re-serving %d aggregated samples from previous request',
+                    results.samples.length));
+        } else {
+            lastZoom = zoom;
+            lastAggPromise = getSamples(results => {
+                trigger('new', { samples: bucketResults(results) });
+            }).then(results => {
+                var agg;
+                if (results.redraw) {
+                    buckets = {};
+                    agg = bucketResults(results);
+                } else {
+                    agg = aggSamples();
+                }
+
+                console.info('Aggregated %d samples to %d',
+                    results.samples.length, agg.length);
+
+                return { samples: agg, redraw: results.redraw }
+            });
+        }
+
+        lastAggPromise.then(trigger('update'));
+        return lastAggPromise;
+    }
+
+    function mergeSampleBucket(bucket) {
+        var samples = {},
+            i, sample, id;
+
+        for (i = 0; i < bucket.length; ++i) {
+            sample = bucket[i];
+            id = sample.species.id();
+
+            if (typeof samples[id] === 'undefined') {
+                samples[id] = sample;
+            } else {
+                samples[id] = sample.merge(samples[id]);
+            }
+        }
+
+        return Object.values(samples);
+    }
+
+    function getSamples(onData) {
         if (lastPromise !== null) {
             lastPromise.then(results =>
                 console.debug('Re-serving %d samples from previous request',
@@ -57,16 +139,6 @@
 
         var region = Controls.get('region'),
             dr = Controls.get('dateRange'),
-
-            data = [],
-            first = true,
-            onData = results => {
-                results.first = first;
-                first = false;
-
-                trigger('new', results);
-            },
-
             request = ++activeRequest,
 
             logResults = results => {
@@ -107,8 +179,6 @@
                 return { samples, first: false };
             }, () =>
                 console.debug('Ignoring responses to old request %d', request))
-
-        lastPromise.then(trigger('update'));
 
         return lastPromise;
     }
@@ -217,7 +287,7 @@
 
     Object.assign(Samples, {
         init,
-        getSamples,
+        getSamples: getAggregatedSamples,
 
         onNew: on('new'),
         onUpdate: on('update'),
