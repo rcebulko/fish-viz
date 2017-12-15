@@ -2,8 +2,7 @@
     function init() {
         console.info('Initializing controls');
 
-        enableShowHide();
-
+        initControlsState();
 
         return Promise.all([
             Controls.SplitPane.init([100, 250]),
@@ -16,10 +15,36 @@
         ]).then(() => Controls.History.init(Controls.registered));
     }
 
-    function enableShowHide() {
-        $('.control-panel-toggle').click(function () {
-            $(this).parents('.control-panel').toggleClass('hidden');
-        });
+    function initControlsState() {
+        function ControlsState () {
+            this.name = 'Controls';
+            this.listeners = [];
+            this.visible = true;
+
+            this.$toggle = $('.control-panel-toggle').click(() => this.toggle());
+        }
+
+        ControlsState.prototype.toggle = function () {
+            this.setState(!this.getState());
+            this.triggerChanged();
+        }
+        ControlsState.prototype.getState = function () { return this.visible; };
+        ControlsState.prototype.setState = function (state) {
+            if (this.visible === state) return;
+            this.visible = state;
+            this.$toggle
+                .parents('.control-panel')
+                .toggleClass('hidden', !this.visible)
+        };
+
+        ControlsState.prototype.triggerChanged = function () {
+            this.listeners.forEach(cb => cb(this.visible));
+        };
+        ControlsState.prototype.onValueChanged = function (cb) {
+            this.listeners.push(cb);
+        };
+
+        Controls.History.register(new ControlsState());
     }
 
     function onChanged(callback) {
