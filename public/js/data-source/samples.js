@@ -45,7 +45,7 @@
     }
 
 
-    function getSamples(onNewData) {
+    function getSamples() {
         if (lastPromise !== null) {
             lastPromise.then(results =>
                 console.debug('Re-serving %d samples from previous request',
@@ -64,9 +64,8 @@
                 results.first = first;
                 first = false;
 
-                if (typeof onNewData === 'function') onNewData(results);
                 trigger('new', results);
-            }
+            },
 
             request = ++activeRequest,
 

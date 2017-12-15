@@ -1,38 +1,25 @@
-(function (Map, TaxonomyTree, Samples, Controls) {
-    var regionBounds = {
-        'FLA KEYS': {
-            lat: [24.4313, 25.7526],
-            lon: [-82.0109, -80.0872],
-        },
-        'DRY TORT': {
-            lat: [24.5420, 24.7364],
-            lon: [-83.1037, -82.7703],
-        },
-        'SEFCRI': {
-            lat: [25.7624, 27.1897],
-            lon: [-80.1559, -79.9938],
-        },
-    },
+(function (Map, TaxonomyTree, Samples, Controls, Config) {
+    var REGION_BOUNDS = Config.regionBounds,
 
-    ZOOM_DEBOUNCE_MS = 3000,
+        ZOOM_DEBOUNCE_MS = Config.zoomDebounce,
 
-    // let GMap resolve the promise as a callback
-    mapLoaded = null,
-    googlePromise = new Promise((resolve, reject) => { mapLoaded = resolve; }),
+        // let GMap resolve the promise as a callback
+        mapLoaded = null,
+        googlePromise = new Promise((resolve, reject) => { mapLoaded = resolve; }),
 
-    tip = d3.tip()
-        .attr('class', 'd3-tip')
-        .direction('n')
-        .html(sample => sample.html()),
+        tip = d3.tip()
+            .attr('class', 'd3-tip')
+            .direction('n')
+            .html(sample => sample.html()),
 
-    $mapWrapper = $(),
-    map, mapNode, bounds, overlay, lasso,
+        $mapWrapper = $(),
+        map, mapNode, bounds, overlay, lasso,
 
-    isLoading = false,
-    loading = state => {
-        if (state === isLoading) return;
-        $mapWrapper.toggleClass('loading', isLoading = state);
-    };
+        isLoading = false,
+        loading = state => {
+            if (state === isLoading) return;
+            $mapWrapper.toggleClass('loading', isLoading = state);
+        };
 
 
     function init() {
@@ -71,12 +58,12 @@
     }
 
     function initBounds() {
-        Object.keys(regionBounds).forEach(function (region) {
-            var rb = regionBounds[region],
+        Object.keys(REGION_BOUNDS).forEach(function (region) {
+            var rb = REGION_BOUNDS[region],
                 bounds = new google.maps.LatLngBounds();
             bounds.extend(new google.maps.LatLng(rb.lat[0], rb.lon[0]));
             bounds.extend(new google.maps.LatLng(rb.lat[1], rb.lon[1]));
-            regionBounds[region] = bounds;
+            REGION_BOUNDS[region] = bounds;
         });
 
         fitRegion(Controls.Region.getValue());
@@ -215,41 +202,45 @@
 
     // sample pruning and merging
     function geoPruneSamples(samples) {
-        var viewBounds = map.getBounds(),
-            edges = viewBounds.toJSON(),
+        var view = map.getBounds().toJSON(),
+            edges = bounds.toJSON(),
+            zoom = map.getZoom(),
 
-            height = edges.north - edges.south,
-            width = edges.east - edges.west,
+            height = view.north - view.south,
+            width = view.east - view.west,
 
             expandedBounds = new google.maps.LatLngBounds(
-                { lat: edges.south - height, lng: edges.west - width },
-                { lat: edges.north + height, lng: edges.east + width },
+                { lat: view.south - height, lng: view.west - width },
+                { lat: view.north + height, lng: view.east + width },
             ),
 
+            magic = 100,
             pxPerBucket = 40,
 
-            vertRes = 3 * mapNode.offsetHeight / pxPerBucket,
-            horizRes = 3 * mapNode.offsetWidth / pxPerBucket,
+            vRange = height,//edges.south - edges.north,
+            hRange = width,//edges.west - edges.east,
+
+            vRes = mapNode.offsetHeight / pxPerBucket,
+            hRes = mapNode.offsetWidth / pxPerBucket,
 
             buckets = {},
             getBucket = (val, min, range, res) =>
-                Math.floor(res * (val - min - range) / (3 * range)),
+                Math.round(res * (val - min) / range),
             getVertBucket = val =>
-                getBucket(val, edges.south, height, vertRes),
+                getBucket(val, edges.south, vRange, vRes),
             getHorizBucket = val =>
-                getBucket(val, edges.west, width, horizRes),
+                getBucket(val, edges.west, hRange, hRes),
             bucketKey = (vert, horiz) => vert + '__' + horiz,
             sampleKey = sample => bucketKey(
                 getVertBucket(sample.latitude),
                 getHorizBucket(sample.longitude)),
             i, key;
 
-
         samples = samples.filter(s =>
                 expandedBounds.contains({ lat: s.latitude, lng: s.longitude }))
 
         for (i = 0; i < samples.length; ++i) {
-            key = sampleKey(samples[i]);
+            key = samples[i].bucket(zoom).join('__');
             if (typeof buckets[key] === 'undefined') buckets[key] = [];
             buckets[key].push(samples[i]);
         }
@@ -322,7 +313,7 @@
     }
 
     function fitRegion(region) {
-        bounds = regionBounds[region];
+        bounds = REGION_BOUNDS[region];
         map.fitBounds(bounds);
     }
 
@@ -368,4 +359,5 @@
 }(window.Viz.Map = {},
     window.Viz.TaxonomyTree,
     window.Samples,
-    window.Controls));
+    window.Controls,
+    window.Config));
