@@ -27,7 +27,15 @@
             .forEach(Ctl => Controls[Ctl].onChanged(() => callback()));
     }
 
+    function get(property) {
+        return {
+            dateRange: Controls.DateRange,
+            region: Controls.Region,
+            species: Controls.SelectTaxonomy,
+        }[property].getValue();
+    }
 
-    Object.assign(Controls, { init, onChanged })
+
+    Object.assign(Controls, { init, get, onChanged })
 }(window.Controls = {},
     window.Config));
