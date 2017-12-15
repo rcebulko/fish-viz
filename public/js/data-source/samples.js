@@ -1,14 +1,15 @@
-(function (Samples, Taxonomy, API, Controls, Config) {
-    var listeners = [],
+(function (Samples, Sample, Taxonomy, API, Controls, Config) {
+    var listeners = { new: [], update: [] },
 
-        speciesSampleCache = Config.speciesSampleCache,
+        useSampleCache = Config.speciesSampleCache,
         // cache[region][species.id()] = { dateRange: [...], samples: [...] }
         globalCache = {},
 
         dateFmt = Controls.DateRange.format,
 
-        activeRequest = 0,
         lastPromise = null,
+
+        activeRequest = 0,
         checkRequest = request => {
             if (request !== activeRequest) throw Error('Inactive request');
         };
@@ -16,92 +17,178 @@
 
     function init() {
         console.info('Initializing data source');
+
         Controls.onChanged(() => {
             lastPromise = null;
-            getSamples(trigger).then(trigger);
+            getSamples();
         });
     }
 
-    function trigger(samples, partial) {
-        listeners.forEach(cb => cb(samples, partial));
+
+    //////////////////////////
+    // Data event listeners //
+    //////////////////////////
+
+    function trigger(type, results) {
+        if (typeof results === 'undefined') return rs => trigger(type, rs);
+
+        (typeof type === 'undefined' ?
+            listeners.new.concat(listeners.update) :
+            listeners[type]
+        ).forEach(cb => cb(results));
     }
-    function onData(callback) { listeners.push(callback); }
+    function on(type, callback) {
+        if (typeof callback === 'undefined') return cb => on(type, cb);
+
+        listeners[type] = listeners[type] || [];
+        listeners[type].push(callback);
+    }
 
 
-    function getSamples(onData) {
+    function getSamples(onNewData) {
         if (lastPromise !== null) {
-            return lastPromise.then(samples => {
+            lastPromise.then(results =>
                 console.debug('Re-serving %d samples from previous request',
-                    samples.length);
-                return samples;
-            });
+                    results.samples.length));
+
+            return lastPromise;
         }
 
-        var region = Controls.Region.getValue(),
-            dateRange = Controls.DateRange.getValue(),
-            species = Controls.SelectTaxonomy.getValue().enabled,
+        var region = Controls.get('region'),
+            dr = Controls.get('dateRange'),
+
             data = [],
-            onData = throttle(onData || (() => null), 500),
-            request = ++activeRequest;
+            onData = results => {
+                if (typeof onNewData === 'function') onNewData(results);
+                trigger('new', results);
+            }
 
-        return lastPromise = Promise.all(
-            species.map(s =>
-                getSpeciesSamples(s, region, dateRange, request,
-                    partialData => onData(data = data.concat(partialData), 'partial')))
-        ).then(sampleSets => {
-            checkRequest(request);
+            request = ++activeRequest,
 
-            var samples = sampleSets.reduce((acc, arr) => acc.concat(arr), []);
-            console.debug('Collected a total of %d samples', samples.length);
+            logResults = results => {
+                var logFmt = {
+                    cache: 'Served %d samples from cache for %s in %s from %s to %s',
+                    fetch: 'Fetched %d samples for %s in %s from %s to %s',
+                }[results.method];
 
-            return samples;
-        }, () => console.debug('Ignoring responses to old request %d', request));
+                console.debug(logFmt,
+                    results.samples.length, results.species.id(), results.region,
+                    dateFmt(results.dateRange[0]), dateFmt(results.dateRange[1]));
+            },
+
+            promises = Controls.get('species')
+                .enabled
+                .map(s => getSpeciesSamples(s, region, dr))
+                .reduce((acc, arr) => acc.concat(arr), []);
+
+        promises.forEach(p => {
+            p.then(logResults);
+            p.then(results => {
+                checkRequest(results.request);
+
+                if (useSampleCache) {
+                    data = data.concat(results.samples);
+                    onData(results.samples, data);
+                } else {
+                    onData(results.samples, results.cache.data);
+                }
+            })
+        });
+
+        lastPromise = Promise.all(promises)
+            .then(resultSets => {
+                var samples;
+
+                checkRequest(request);
+
+                samples = resultSets.map(results => results.samples)
+                    .reduce((acc, arr) => acc.concat(arr));
+
+                console.debug('Collected a total of %d samples', samples.length);
+
+                return samples;
+            }, () =>
+                console.debug('Ignoring responses to old request %d', request))
+
+        lastPromise.then(trigger('update'));
+
+        return lastPromise;
     }
 
 
-    function getSpeciesSamples(species, region, dateRange, request, onData) {
+    ////////////////////////////////
+    // Sample querying & fetching //
+    ////////////////////////////////
+
+    // request a set of samples explicitly from the API
+    function fetchSpeciesSamples(species, region, dateRange) {
+        return API.fetchSpeciesSamples(species.id(), {
+            region,
+            date: { gte: new Date(dateRange[0]), lte: new Date(dateRange[1]) }
+        }).then(samples => samples.map(s => new Sample(s, species)));
+    }
+
+
+    ////////////////////
+    // Sample caching //
+    ////////////////////
+
+    // returns promises for each segment of species sample results
+    function getSpeciesSamples(species, region, dateRange) {
         var cache = getCache(species, region),
             segments,
             promises = [],
-            range = [Infinity, -Infinity],
 
-            dateFilter = sample =>
-                sample.date >= dateRange[0] && sample.date <= dateRange[1];
+            wrapSamples = (method, dr) =>
+                samples => Object.assign({
+                    species,
+                    region,
+                    dateRange: dr,
 
-        if (speciesSampleCache && cache.dateRange.length) {
-            promises.push(new Promise(resolve => {
-                var filtered = cache.data.filter(dateFilter);
-                console.debug(
-                    'Served %d samples from cache for %s in %s from %s to %s',
-                    filtered.length, species.id(), region,
-                    dateFmt(cache.dateRange[0]), dateFmt(cache.dateRange[1]));
+                    method,
+                    cache,
+                    request: activeRequest,
+                    samples,
+                }),
 
-                resolve(filtered);
-            }));
+            cacheResults = results => {
+                var cache = results.cache,
+                    dr = results.dateRange;
+
+                if (useSampleCache) {
+                    cache.dateRange = mergeSegments(cache.dateRange, dr);
+                    cache.data = cache.data.concat(results.samples);
+                }
+
+                return results;
+            };
+
+        if (useSampleCache && cache.dateRange.length) {
+            promises.push(getCachedSamples(cache)
+                .then(wrapSamples('cache', cache.dateRange)))
 
             segments = getOuterSegments(dateRange, cache.dateRange);
         } else {
             segments = [dateRange];
         }
 
-        promises = promises.concat(segments.map(dr =>
+        return promises.concat(segments.map(dr =>
             fetchSpeciesSamples(species, region, dr)
-                .then(samples => {
-                    if (speciesSampleCache) {
-                        cache.dateRange = mergeSegments(cache.dateRange, dr);
-                        cache.data = cache.data.concat(samples);
-                        checkRequest(request);
-                        onData(cache.data);
-                    }
-
-                    return samples;
-                })
-        ));
-
-        return Promise.all(promises).then(ss =>
-            ss.reduce((acc, arr) => acc.concat(arr), []));
+                .then(wrapSamples('fetch', dr))
+                .then(cacheResults)));
     }
 
+    // return a promise yielding the cached sample results
+    function getCachedSamples(cache) {
+        var dateRange = cache.dateRange.slice(),
+            dateFilter = sample =>
+                sample.date >= dateRange[0] && sample.date <= dateRange[1];
+
+        return new Promise(resolve => resolve(
+            cache.data.filter(dateFilter)));
+    }
+
+    // return the sample cache for the species
     function getCache(species, region) {
         if (typeof globalCache[region] === 'undefined') globalCache[region] = {};
         cache = globalCache[region];
@@ -128,7 +215,7 @@
         return segments;
     }
 
-    // merge two date ranges into one
+    // merge two ranges (each represented as an array) into one
     function mergeSegments(seg1, seg2) {
         if (seg1.length === 0) return seg2;
         if (seg2.length === 0) return seg1;
@@ -136,30 +223,15 @@
     }
 
 
-    // request a set of samples explicitly from the API
-    function fetchSpeciesSamples(species, region, dateRange) {
-        return API.fetchSpeciesSamples(species.id(), {
-            region,
-            date: { gte: new Date(dateRange[0]), lte: new Date(dateRange[1]) }
-        }).then(samples => {
-            console.debug('Fetched %d samples for %s in %s from %s to %s',
-                samples.length, species.id(), region,
-                dateFmt(dateRange[0]), dateFmt(dateRange[1]));
+    Object.assign(Samples, {
+        init,
+        getSamples,
 
-            return samples.map(s => preprocessSample(s, species));
-        });
-    }
-
-    // convert serialized fields into species and date objects
-    function preprocessSample(sample, species) {
-        sample.date = new Date(sample.date);
-        sample.species = species;
-        return sample;
-    }
-
-
-    Object.assign(Samples, { getSamples, onData, init });
+        onNew: on('new'),
+        onUpdate: on('update'),
+    });
 }(window.Samples = {},
+    window.Sample,
     window.Taxonomy,
     window.API,
     window.Controls,
