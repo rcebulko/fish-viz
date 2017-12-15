@@ -1,5 +1,7 @@
-(function (HeatMap) {
+(function (HeatMap, Config) {
     var state = false,
+
+        ZOOM_FACTOR = Config.heatmapZoomFactor,
 
         weightKey = 'number',
         getSampleWeight = {
@@ -15,7 +17,7 @@
             }
         },
 
-        convertSamples = samples => samples.map(s => {
+        convertResults = results => results.samples.map(s => {
             return {
                 location: new google.maps.LatLng(s.latitude, s.longitude),
                 weight: getSampleWeight[weightKey](s),
@@ -34,13 +36,12 @@
             update();
         });
 
-
-        // return initHeatMap(map);
+        return initHeatMap(map);
     }
 
     function initHeatMap(map) {
         return Samples.getSamples()
-            .then(convertSamples)
+            .then(convertResults)
             .then(heatMapData => {
                 heatMap = new google.maps.visualization.HeatmapLayer({
                     data: [],
@@ -48,14 +49,22 @@
                 });
 
                 heatMap.setMap(map);
+                setRadius();
+                google.maps.event.addListener(map, 'zoom_changed', setRadius);
                 draw(heatMapData);
-                Samples.onData(samples => draw(convertSamples(samples)));
+                Samples.onUpdate(update);
             });
+    }
+
+    function setRadius() {
+        heatMap.setOptions({
+            radius: heatMap.getMap().getZoom() * 10 - ZOOM_FACTOR
+        });
     }
 
     function update() {
         return Samples.getSamples()
-            .then(convertSamples)
+            .then(convertResults)
             .then(draw);
     }
 
@@ -63,4 +72,4 @@
 
 
     Object.assign(HeatMap, { init, initHeatMap, getHeatMap: () => heatMap });
-}(window.Controls.HeatMap = {}));
+}(window.Controls.HeatMap = {}, window.Config));

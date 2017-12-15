@@ -1,7 +1,8 @@
 (function (Map, TaxonomyTree, Samples, Controls, Config) {
     var REGION_BOUNDS = Config.regionBounds,
-
+        ZOOM_CHANGE_DEBOUNCE_MS = Config.zoomChangeDebounce,
         ZOOM_DEBOUNCE_MS = Config.zoomDebounce,
+        PAN_THROTTLE_MS = Config.panThrottle,
 
         // let GMap resolve the promise as a callback
         mapLoaded = null,
@@ -56,7 +57,7 @@
                 TaxonomyTree.onFocused(restyleFocus);
             }).then(() => {
                 loading(true);
-                Samples.getSamples(map.getZoom());
+                Samples.getAggregatedSamples(map.getZoom());
             }).then(initHistory);
     }
 
@@ -128,12 +129,12 @@
         });
 
         google.maps.event.addListener(map, 'center_changed', throttle(() =>
-            Samples.getSamples(), 250));
+            Samples.getAggregatedSamples(), PAN_THROTTLE_MS));
     }
 
     function initZoom() {
         google.maps.event.addListener(map, 'zoom_changed', debounce(() =>
-            Samples.getSamples(map.getZoom()), 250));
+            Samples.getAggregatedSamples(map.getZoom()), ZOOM_DEBOUNCE_MS));
     }
 
     function initLasso() {
@@ -288,7 +289,7 @@
 
         MapState.prototype.triggerChanged = debounce(function () {
             this.listeners.forEach(cb => cb());
-        }, ZOOM_DEBOUNCE_MS);
+        }, ZOOM_CHANGE_DEBOUNCE_MS);
 
         MapState.prototype.onValueChanged = function (cb) {
             this.listeners.push(cb);

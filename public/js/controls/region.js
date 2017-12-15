@@ -1,9 +1,5 @@
 (function (register) {
-    var regions = {
-        'FLA KEYS': 'Florida Keys',
-        'DRY TORT': 'Dry Tortugas',
-        'SEFCRI': 'Southeast Florida Coral Reef',
-    };
+    var regions = Config.regionNames;
 
 
     // region control initialization

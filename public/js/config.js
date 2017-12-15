@@ -12,10 +12,19 @@
         // enable species-level sample caching
         speciesSampleCache: true,
 
+        // density of aggregated samples [1-10]
+        sampleBucketDensity: 7,
+
         // maximum number of history/future states to track; 0 for no limit
         maxHistory: 20,
         maxFuture: 20,
 
+        // region info
+        regionNames: {
+            'FLA KEYS': 'Florida Keys',
+            'DRY TORT': 'Dry Tortugas',
+            'SEFCRI': 'Southeast Florida Coral Reef',
+        },
         regionBounds: {
             'FLA KEYS': {
                 lat: [24.4313, 25.7526],
@@ -31,9 +40,16 @@
             },
         },
 
+        // cross-region boundaries (for spatial hashing)
         minLat: 24.4313, minLon: -83.1037,
         maxLat: 27.1897, maxLon: -79.9978,
 
-        zoomDebounce: 3000,
+        // timings in milliseconds
+        zoomChangeDebounce: 3000,
+        zoomDebounce: 250,
+        panThrottle: 250,
+
+        // heatmap radius offset
+        heatmapZoomFactor: 75
     });
 }(window.Config = window.Config = {}));

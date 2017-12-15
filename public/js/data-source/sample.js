@@ -16,7 +16,7 @@
         vRange = north - south,
         hRange = east - west,
 
-        res = 1024,
+        res = Math.pow(2, 9 + Config.sampleBucketDensity / 5),
 
         getBucket = (val, min, range) => Math.round(res * (val - min) / range),
         getVertBucket = val => getBucket(val, south, vRange),

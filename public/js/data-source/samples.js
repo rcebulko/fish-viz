@@ -1,7 +1,7 @@
 (function (Samples, Sample, Taxonomy, API, Controls, Config) {
     var listeners = { new: [], update: [] },
 
-        useSampleCache = Config.speciesSampleCache,
+        USE_CACHE = Config.speciesSampleCache,
         // cache[region][species.id()] = { dateRange: [...], samples: [...] }
         globalCache = {},
 
@@ -161,7 +161,7 @@
             p.then(results => {
                 checkRequest(results.request);
                 logResults(results);
-                onData(results);
+                if (typeof onData === 'function') onData(results);
             });
         });
 
@@ -226,7 +226,7 @@
                 var cache = results.cache,
                     dr = results.dateRange;
 
-                if (useSampleCache) {
+                if (USE_CACHE) {
                     cache.dateRange = mergeSegments(cache.dateRange, dr);
                     cache.data = cache.data.concat(results.samples);
                 }
@@ -234,7 +234,7 @@
                 return results;
             };
 
-        if (useSampleCache && cache.dateRange.length) {
+        if (USE_CACHE && cache.dateRange.length) {
             promises.push(new Promise(resolve =>
                 resolve(cache.data.filter(dateFilter)))
                 .then(wrapSamples('cache', cache.dateRange)))
@@ -287,7 +287,8 @@
 
     Object.assign(Samples, {
         init,
-        getSamples: getAggregatedSamples,
+        getSamples,
+        getAggregatedSamples,
 
         onNew: on('new'),
         onUpdate: on('update'),
