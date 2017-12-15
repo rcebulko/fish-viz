@@ -14,70 +14,25 @@
         },
     },
 
+    ZOOM_DEBOUNCE_MS = 3000,
+
     // let GMap resolve the promise as a callback
     mapLoaded = null,
     googlePromise = new Promise((resolve, reject) => { mapLoaded = resolve; }),
 
-    month = 1000 * 60 * 60 * 24 * 30,
-    fmtDates = dateRange => {
-        if (dateRange[1] - dateRange[0] < month) {
-            return Controls.DateRange.format(dateRange[0]);
-        } else {
-            return dateRange.map(Controls.DateRange.format)
-                .join(' to ');
-        }
-    },
-
-    fmtProtected = prot => {
-        if (prot > 0.99) {
-            return 'Yes';
-        } else if (prot < 0.01) {
-            return 'No';
-        } else {
-            return prot.toFixed(3) * 100 + '%';
-        }
-    },
-
-    tip = d3.tip().attr('class', 'd3-tip')
+    tip = d3.tip()
+        .attr('class', 'd3-tip')
         .direction('n')
-        .html(sample => {
-            if (sample.aggregated) {
-                return [
-                    '<b>' + sample.count + ' Samples</b>',
-                    [
-                        ['Date', fmtDates(sample.date)],
-                        ['Latitude', '~' + sample.latitude.toFixed(5)],
-                        ['Longitude', '~' + sample.longitude.toFixed(5)],
-                        ['Depth', sample.depth.map(d => d.toFixed(0)).join(' - ')],
-                        ['Length', sample.length.map(len => len.toFixed(2)).join(' - ')],
-                        ['Avg. Length', sample.avgLength.toFixed(2)],
-                        ['Number', sample.number.map(n => n.toFixed(1)).join(' - ')],
-                        ['Total Number', sample.totalNumber.toFixed(0)],
-                        ['Protected', fmtProtected(sample.protected)],
-                    ].map(lbl_val => '<b>' + lbl_val.join('</b>: ')).join('<br>'),
-                    sample.species.html(),
-                ].join('<br><br>');
-            } else {
-                return [
-                    '<b>Sample</b>',
-                    [
-                        ['Date', Controls.DateRange.format(sample.date)],
-                        ['Latitude', sample.latitude.toFixed(5)],
-                        ['Longitude', sample.longitude.toFixed(5)],
-                        ['Depth', sample.depth.toFixed(0)],
-                        ['Length', sample.length.toFixed(2)],
-                        ['Number', sample.number.toFixed(1)],
-                        ['Protected', sample.protected ? 'Yes' : 'No'],
-                    ].map(lbl_val => '<b>' + lbl_val.join('</b>: ')).join('<br>'),
-                    sample.species.html(),
-                ].join('<br><br>');
-            }
-        }),
+        .html(sample => sample.html()),
 
     $mapWrapper = $(),
     map, mapNode, bounds, overlay, lasso,
 
-    loading = state => $mapWrapper.toggleClass('loading', state);
+    isLoading = false,
+    loading = state => {
+        if (state === isLoading) return;
+        $mapWrapper.toggleClass('loading', isLoading = state);
+    };
 
 
     function init() {
@@ -106,13 +61,13 @@
                 initLasso();
 
                 Controls.Region.onChanged(fitRegion);
-                Samples.onData(samples => {
-                    loading(true);
-                    drawSamples(samples);
-                });
-                TaxonomyTree.onFocused(restyle);
-            }).then(draw)
-                .then(initHistory);
+                Samples.onNew(drawNewSamples);
+                Samples.onUpdate(() => loading(false));
+                TaxonomyTree.onFocused(restyleFocus);
+            }).then(() => {
+                loading(true);
+                Samples.getSamples();
+            }).then(initHistory);
     }
 
     function initBounds() {
@@ -183,12 +138,16 @@
         });
 
         google.maps.event.addListener(map, 'center_changed',
-            throttle(() => draw(), 1000));
+            throttle(() => overlay.draw(), 1000));
     }
 
     function initZoom() {
-        google.maps.event.addListener(map, 'zoom_changed',
-            debounce(() => draw(), 250));
+        google.maps.event.addListener(map, 'zoom_changed', debounce(() =>
+            Samples.getSamples().then(results => {
+                results.first = true;
+                results.samples = geoPruneSamples(results.samples);
+                drawNewSamples(results);
+            }), 250));
     }
 
     function initLasso() {
@@ -254,32 +213,6 @@
     }
 
 
-    function draw() {
-        loading(true);
-        return Samples.getSamples(drawSamples)
-            .then(drawSamples, () => null);
-    }
-
-    function nearBounds() {
-        var bounds = map.getBounds(),
-
-            ne = bounds.getNorthEast(),
-            sw = bounds.getSouthWest(),
-
-            latMin = sw.lat(),
-            lngMin = sw.lng(),
-            latMax = ne.lat(),
-            lngMax = ne.lng(),
-
-            latRange = latMax - latMin,
-            lngRange = lngMax - lngMin;
-
-        bounds.extend({ lat: latMin - latRange, lng: lngMin - lngRange });
-        bounds.extend({ lat: latMax + latRange, lng: lngMax + lngRange });
-        return bounds;
-    }
-
-
     // sample pruning and merging
     function geoPruneSamples(samples) {
         var viewBounds = map.getBounds(),
@@ -328,77 +261,38 @@
 
     function mergeSampleBucket(bucket) {
         var samples = {},
-            i, sample;
+            i, sample, id;
 
         for (i = 0; i < bucket.length; ++i) {
-            sample = bucket[i]
-            if (typeof samples[sample.species_code] === 'undefined') {
-                samples[sample.species_code] = sample;
+            sample = bucket[i];
+            id = sample.species.id();
+
+            if (typeof samples[id] === 'undefined') {
+                samples[id] = sample;
             } else {
-                samples[sample.species_code] = mergeSamples(
-                    samples[sample.species_code],
-                    sample);
+                samples[id] = sample.merge(samples[id]);
             }
         }
 
         return Object.values(samples);
     }
 
-    function mergeSamples(s1, s2) {
-        var s1 = s1.aggregated ? s1 : aggregatedSingleton(s1);
-            total = s1.totalNumber + s2.number,
-
-            avg = key => (s1[key] * s1.totalNumber + s2[key] * s2.number) / total,
-            range = key => [
-                Math.min(s1[key][0], s2[key]),
-                Math.max(s1[key][1], s2[key])
-            ];
-
-        if (!s1.aggregated) s1 = aggregatedSingleton(s1);
-
-        return {
-            id: s1.id + '-' + s2.id,
-            count: s1.count + 1,
-            aggregated: true,
-            date: range('date'),
-            depth: range('depth'),
-            latitude: avg('latitude'),
-            longitude: avg('longitude'),
-            length: range('length'),
-            avgLength: (s1.avgLength * s1.totalNumber + s2.length * s2.number) / total,
-            number: range('number'),
-            totalNumber: total,
-            protected: avg('protected'),
-            species: s1.species,
-            species_code: s1.species_code,
-        }
-    }
-
-    function aggregatedSingleton(s) {
-        return Object.assign({}, s, {
-            aggregated: true,
-            count: 1,
-            date: [s.date, s.date],
-            depth: [s.depth, s.depth],
-            length: [s.length, s.length],
-            avgLength: [s.length],
-            number: [s.number, s.number],
-            totalNumber: s.number,
-        });
-    }
-
-
-    function drawSamples(samples, partial) {
-        if (!samples) return;
-
-        var samples = geoPruneSamples(samples),
+    function drawNewSamples(results) {
+        var samples = geoPruneSamples(results.samples),
             nodes = overlay.children().data(samples, d => d.id),
-            newNodes = nodes.enter().append('svg').classed('sample', true),
-            complete = partial !== 'partial';
+            newNodes = nodes.enter().append('svg').classed('sample', true);
 
-        console.debug('Drawing %d samples', samples.length);
+        loading(true);
+        console.debug('Drawing %d new samples', samples.length);
 
-        nodes.exit().remove();
+        if (results.first) nodes.exit().remove();
+
+        drawNewNodes(newNodes);
+        lasso.items(nodes.merge(newNodes));
+        restyleFocus();
+    }
+
+    function drawNewNodes(newNodes) {
         overlay.draw();
 
         // initialize d3-tip on each marker SVG
@@ -414,40 +308,10 @@
                 .style('stroke-width', 1)
                 .on('mouseover', tip.show)
                 .on('mouseout', tip.hide)
-            .merge(nodes)
-                .attr('r', normalizedRadiusFn(samples));
-
-        lasso.items(nodes.merge(newNodes));
-        restyle();
-
-        if (complete) loading(false);
+                .attr('r', s => s.radius());
     }
 
-    function normalizedRadiusFn(samples) {
-        var minR = 5, maxR = 20,
-            minNum = Infinity,
-            maxNum = -Infinity,
-
-            getNum = s => Math.sqrt(s.aggregated ? s.avgLength : s.length),// Math.log(1.5),
-
-            // scale values between 0 and 1
-            znorm = val => (val - minNum) / (maxNum - minNum);
-
-        samples.map(getNum)
-            .forEach(num => {
-                minNum = Math.min(minNum, num);
-                maxNum = Math.max(maxNum, num);
-            });
-
-        if (minNum === maxNum) {
-            return () => (minR + maxR) / 2;
-        } else {
-            return d => minR + znorm(getNum(d)) * (maxR - minR);
-        }
-
-    }
-
-    function restyle(inFocus) {
+    function restyleFocus(inFocus) {
         if (inFocus) {
             overlay.children()
                 .style('opacity', d => d.species.isFocused() ? 1 : 0.1)
@@ -485,7 +349,7 @@
 
         MapState.prototype.triggerChanged = debounce(function () {
             this.listeners.forEach(cb => cb());
-        }, 3000);
+        }, ZOOM_DEBOUNCE_MS);
 
         MapState.prototype.onValueChanged = function (cb) {
             this.listeners.push(cb);

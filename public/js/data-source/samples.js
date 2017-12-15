@@ -51,14 +51,19 @@
                 console.debug('Re-serving %d samples from previous request',
                     results.samples.length));
 
-            return lastPromise;
+            return lastPromise.then(results =>
+                Object.assign({ redraw: true }, results));
         }
 
         var region = Controls.get('region'),
             dr = Controls.get('dateRange'),
 
             data = [],
+            first = true,
             onData = results => {
+                results.first = first;
+                first = false;
+
                 if (typeof onNewData === 'function') onNewData(results);
                 trigger('new', results);
             }
@@ -82,17 +87,11 @@
                 .reduce((acc, arr) => acc.concat(arr), []);
 
         promises.forEach(p => {
-            p.then(logResults);
             p.then(results => {
                 checkRequest(results.request);
-
-                if (useSampleCache) {
-                    data = data.concat(results.samples);
-                    onData(results.samples, data);
-                } else {
-                    onData(results.samples, results.cache.data);
-                }
-            })
+                logResults(results);
+                onData(results);
+            });
         });
 
         lastPromise = Promise.all(promises)
@@ -102,11 +101,11 @@
                 checkRequest(request);
 
                 samples = resultSets.map(results => results.samples)
-                    .reduce((acc, arr) => acc.concat(arr));
+                    .reduce((acc, arr) => acc.concat(arr), []);
 
                 console.debug('Collected a total of %d samples', samples.length);
 
-                return samples;
+                return { samples, first: false };
             }, () =>
                 console.debug('Ignoring responses to old request %d', request))
 
@@ -139,6 +138,9 @@
             segments,
             promises = [],
 
+            dateFilter = sample =>
+                sample.date >= dateRange[0] && sample.date <= dateRange[1],
+
             wrapSamples = (method, dr) =>
                 samples => Object.assign({
                     species,
@@ -164,7 +166,8 @@
             };
 
         if (useSampleCache && cache.dateRange.length) {
-            promises.push(getCachedSamples(cache)
+            promises.push(new Promise(resolve =>
+                resolve(cache.data.filter(dateFilter)))
                 .then(wrapSamples('cache', cache.dateRange)))
 
             segments = getOuterSegments(dateRange, cache.dateRange);
@@ -176,16 +179,6 @@
             fetchSpeciesSamples(species, region, dr)
                 .then(wrapSamples('fetch', dr))
                 .then(cacheResults)));
-    }
-
-    // return a promise yielding the cached sample results
-    function getCachedSamples(cache) {
-        var dateRange = cache.dateRange.slice(),
-            dateFilter = sample =>
-                sample.date >= dateRange[0] && sample.date <= dateRange[1];
-
-        return new Promise(resolve => resolve(
-            cache.data.filter(dateFilter)));
     }
 
     // return the sample cache for the species
