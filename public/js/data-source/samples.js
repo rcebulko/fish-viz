@@ -13,7 +13,7 @@
 
         activeRequest = 0,
         checkRequest = request => {
-            if (request !== activeRequest) throw Error('Inactive request');
+            if (request !== activeRequest) Promise.reject('Ignored old request');
         };
 
 
@@ -51,6 +51,7 @@
         var buckets = {},
             numAggSamples = 0,
             zoom = zoom || lastZoom,
+            request = activeRequest,
 
             bucketResults = results => {
                 var samples = results.samples,
@@ -87,9 +88,15 @@
                     results.samples.length));
         } else {
             lastZoom = zoom;
+            request = ++activeRequest;
+
             lastAggPromise = getSamples(results => {
-                trigger('new', { samples: bucketResults(results) });
+                if (request === activeRequest) {
+                    trigger('new', { samples: bucketResults(results) });
+                }
             }).then(results => {
+                checkRequest(request)
+
                 var agg;
                 if (results.redraw) {
                     buckets = {};
@@ -103,7 +110,7 @@
                     results.samples.length, agg.length);
 
                 return { samples: agg, redraw: true }
-            });
+            }, () => console.error('Ignored old request'));
         }
 
         lastAggPromise.then(trigger('update'));
@@ -140,7 +147,7 @@
 
         var region = Controls.get('region'),
             dr = Controls.get('dateRange'),
-            request = ++activeRequest,
+            request = activeRequest,
 
             logResults = results => {
                 var logFmt = {
@@ -178,8 +185,7 @@
                 console.debug('Collected a total of %d samples', samples.length);
 
                 return { samples, first: false };
-            }, () =>
-                console.debug('Ignoring responses to old request %d', request))
+            }, () => console.error('Ignored old request'));
 
         return lastPromise;
     }

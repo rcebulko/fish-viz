@@ -40,20 +40,14 @@
     }
 
     function initHeatMap(map) {
-        return Samples.getSamples()
-            .then(convertResults)
-            .then(heatMapData => {
-                heatMap = new google.maps.visualization.HeatmapLayer({
-                    data: [],
-                    radius: 30,
-                });
+        heatMap = new google.maps.visualization.HeatmapLayer({
+            data: [],
+            radius: 30,
+        });
 
-                heatMap.setMap(map);
-                setRadius();
-                google.maps.event.addListener(map, 'zoom_changed', setRadius);
-                draw(heatMapData);
-                Samples.onUpdate(update);
-            });
+        heatMap.setMap(map);
+        google.maps.event.addListener(map, 'zoom_changed', setRadius);
+        Samples.onUpdate(results => draw(convertResults(results)));
     }
 
     function setRadius() {
@@ -63,7 +57,7 @@
     }
 
     function update() {
-        return Samples.getSamples()
+        return Samples.getAggregatedSamples()
             .then(convertResults)
             .then(draw);
     }
