@@ -14,6 +14,7 @@
 
     function init(controls) {
         controls.forEach(register);
+        window.components = components;
         $('.control-panel-undo').click(undo);
         $('.control-panel-redo').click(redo);
     }
@@ -69,7 +70,7 @@
             pushState(history, component.name);
         });
 
-        if (state[component.name]) {
+        if (typeof state[component.name] !== 'undefined') {
             console.debug('Initializing %s with stored value', component.name);
             component.setState(state[component.name]);
         } else {
