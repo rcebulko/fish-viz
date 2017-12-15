@@ -13,7 +13,7 @@
         speciesSampleCache: true,
 
         // density of aggregated samples [1-10]
-        sampleBucketDensity: 7,
+        sampleBucketDensity: 6,
 
         // maximum number of history/future states to track; 0 for no limit
         maxHistory: 20,
@@ -46,7 +46,7 @@
 
         // timings in milliseconds
         zoomChangeDebounce: 3000,
-        zoomDebounce: 250,
+        zoomDebounce: 2000,
         panThrottle: 250,
 
         // heatmap radius offset

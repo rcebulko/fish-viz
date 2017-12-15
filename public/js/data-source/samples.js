@@ -93,6 +93,7 @@
                 var agg;
                 if (results.redraw) {
                     buckets = {};
+                    numAggSamples = 0;
                     agg = bucketResults(results);
                 } else {
                     agg = aggSamples();
@@ -101,7 +102,7 @@
                 console.info('Aggregated %d samples to %d',
                     results.samples.length, agg.length);
 
-                return { samples: agg, redraw: results.redraw }
+                return { samples: agg, redraw: true }
             });
         }
 

@@ -133,8 +133,14 @@
     }
 
     function initZoom() {
-        google.maps.event.addListener(map, 'zoom_changed', debounce(() =>
-            Samples.getAggregatedSamples(map.getZoom()), ZOOM_DEBOUNCE_MS));
+        var zoomed = false;
+        google.maps.event.addListener(map, 'idle', () => {
+            if (zoomed) {
+                Samples.getAggregatedSamples(map.getZoom());
+                zoomed = false;
+            }
+        });
+        google.maps.event.addListener(map, 'zoom_changed', () => zoomed = true);
     }
 
     function initLasso() {
@@ -230,9 +236,24 @@
         loading(true);
         console.debug('Drawing %d new samples', samples.length);
 
-        nodes.exit().remove();
+        if (results.redraw) {
+            nodes.exit()
+                .transition()
+                .delay(1000)
+                .remove();
+            nodes.exit()
+                .selectAll('.sample-marker')
+                .transition()
+                .duration(1000)
+                .attr('r', 0)
+        }
 
         drawNewNodes(newNodes);
+        nodes.selectAll('.sample-marker')
+            .transition()
+            .duration(1000)
+            .attr('r', s => s.radius());
+
         lasso.items(nodes.merge(newNodes));
         restyleFocus();
     }
@@ -246,14 +267,15 @@
             .map(d3.select)
             .forEach(viz => viz.call(tip));
 
-        newNodes
-            .append('circle')
-                .style('fill', d => d.species.color)
-                .style('stroke', '#000')
-                .style('stroke-width', 1)
-                .on('mouseover', tip.show)
-                .on('mouseout', tip.hide)
-                .attr('r', s => s.radius());
+        newNodes.append('circle')
+            .classed('sample-marker', true)
+            .style('fill', d => d.species.color)
+            .style('stroke', '#000')
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide)
+            .attr('r', 0)
+        // newNodes.selectAll('.sample-marker')
+            // .attr('')
     }
 
     function restyleFocus(inFocus) {
