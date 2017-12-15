@@ -249,7 +249,8 @@
         }
 
         drawNewNodes(newNodes);
-        nodes.selectAll('.sample-marker')
+        nodes.merge(newNodes)
+            .selectAll('.sample-marker')
             .transition()
             .duration(1000)
             .attr('r', s => s.radius());
