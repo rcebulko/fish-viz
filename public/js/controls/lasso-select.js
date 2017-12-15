@@ -1,53 +1,57 @@
-(function (LassoSelect) {
-    var selectMode,
-        selector,
-        selection = {},
-
-        modes = {
+(function (register) {
+    var selectorModes = {
             select:    (possible, selected) =>  possible,
             add:       (possible, selected) =>  possible ||  selected,
             subtract:  (possible, selected) => !possible &&  selected,
             intersect: (possible, selected) =>  possible &&  selected,
             exclude:   (possible, selected) => !possible || !selected,
-        }
-
-    function init() {
-        console.info('Initializing lasso selection controls');
-
-        initSelectionSettings();
-
-        $('.control-panel-select-select').click();
-    }
+        };
 
 
-    function initSelectionSettings() {
-        Object.keys(modes).forEach(mode => {
+    function LassoSelect() {}
+    register(LassoSelect, function () {
+        var self = this;
+        this.selection = {};
+
+        Object.keys(selectorModes).forEach(mode => {
             $('.control-panel-select-' + mode).click(function() {
-                selectMode = mode;
-                selector = modes[selectMode];
+                self.selector = selectorModes[mode];
 
                 $('.control-panel-select').children().removeClass('active');
                 $(this).addClass('active');
 
-                console.info('Selection mode set to %s', selectMode);
+                console.info('Selection mode set to %s', mode);
             });
         });
-    }
 
-
-    function setSelection(selectedIds) {
-        selection = {};
-        selectedIds.forEach(id => selection[id] = true);
-    }
-
-    function willSelect(id, possible) {
-        return selector(possible, selection[id]);
-    }
-
-
-    Object.assign(LassoSelect, {
-        init,
-        setSelection,
-        willSelect,
+        $('.control-panel-select-select').click();
     });
-}(window.Controls.LassoSelect = {}));
+
+
+    // display and logging
+    LassoSelect.prototype.valueToString = lassoed =>
+        lassoed.length + ' lassoed';
+
+
+    // no external state to read/write
+    LassoSelect.prototype.readValue = () => [];
+
+    LassoSelect.prototype.writeValue = selectedIds => {
+        d3.selectAll('.sample')
+            .classed('lasso-selected', d => selectedIds.indexOf(d.id) !== -1);
+    };
+
+
+    // accessors, mutators, and change listeners
+    LassoSelect.prototype.set = function (selectedIds) {
+        this.value = selectedIds;
+        this.selection = {};
+        selectedIds.forEach(id => this.selection[id] = true);
+    }
+
+
+    // helper for applying operations to lasso selections
+    LassoSelect.prototype.willSelect = function(id, possible) {
+        return this.selector(possible, this.selection[id]);
+    }
+}(window.Controls.register));

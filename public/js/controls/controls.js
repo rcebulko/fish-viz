@@ -8,7 +8,7 @@
         return Promise.all([
             Controls.SplitPane.init([100, 250]),
             Controls.MouseAction.init(),
-            Controls.LassoSelect.init(),
+            Controls.LassoSelect.init([]),
             Controls.Region.init(Config.initRegion),
             Controls.DateRange.init(Config.initDateRange
                 .map(d => new Date('' + d).getTime())),
@@ -32,6 +32,7 @@
             dateRange: Controls.DateRange,
             region: Controls.Region,
             species: Controls.SelectTaxonomy,
+            lasso: Controls.LassoSelect,
         }[property].getValue();
     }
 

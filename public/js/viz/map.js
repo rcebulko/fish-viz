@@ -142,8 +142,12 @@
             possibleClass = 'lasso-possible',
             selectedClass = 'lasso-selected',
 
-            willSelect = Controls.LassoSelect.willSelect,
-            willSelectClass = state => { return d => willSelect(d.id, state); };
+            willSelectClass = state => {
+                return d => {
+                    console.log(d);
+                    return Controls.LassoSelect.willSelect(d.id, state);
+                }
+            };
 
         lasso = d3.lasso()
             .targetArea(d3.select('.lasso-overlay'))
@@ -170,9 +174,10 @@
                     .classed(selectedClass, willSelectClass(false))
 
                 selection = d3.selectAll('.lasso-selected').data();
-                Controls.LassoSelect.setSelection(selection.map(s => s.id));
+                Controls.LassoSelect.setValue(selection.map(s => s.id));
                 updateSummaries(selection);
             });
+
         d3.select('.lasso-overlay').call(lasso)
     }
 
