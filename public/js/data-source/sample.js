@@ -49,7 +49,7 @@
 
     Sample.prototype.radiusVal = function () { return this.length; };
     Sample.prototype.radius = function () {
-        return Math.pow(this.radiusVal(), 9/10);
+        return Math.max(5, Math.pow(this.radiusVal(), 3/4));
     };
 
     Sample.prototype.titleHtml = function() {
