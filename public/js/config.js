@@ -14,6 +14,9 @@
         // enable dynamic sample aggregation
         aggregateSamples: true,
 
+        // if true, the history module run the playback sequence
+        playbackMode: true,
+
         // density of aggregated samples [1-10]
         sampleBucketDensity: 9,
 

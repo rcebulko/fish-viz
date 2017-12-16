@@ -3,7 +3,7 @@
         console.info('Initializing visualizations');
 
         Viz.TaxonomyTree.init();
-        Viz.Map.init();
+        return Viz.Map.init();
     }
 
 

@@ -148,7 +148,13 @@
                 Taxonomy.init()
                     .then(Controls.init)
                     .then(Samples.init)
-                    .then(Viz.init);
+                    .then(Viz.init)
+                    .then(() => {
+                        if (Config.playbackMode) {
+                            return Controls.History.runPlayback()
+                                .then(console.log);
+                        }
+                    });
             });
         </script>
 
