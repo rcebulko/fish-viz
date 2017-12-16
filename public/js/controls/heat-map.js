@@ -57,7 +57,7 @@
     }
 
     function update() {
-        return Samples.getAggregatedSamples()
+        return Samples.getSamples()
             .then(convertResults)
             .then(draw);
     }

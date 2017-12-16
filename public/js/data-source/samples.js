@@ -2,6 +2,7 @@
     var listeners = { new: [], update: [] },
 
         USE_CACHE = Config.speciesSampleCache,
+        AGGREGATE_SAMPLES = Config.aggregateSamples,
         // cache[region][species.id()] = { dateRange: [...], samples: [...] }
         globalCache = {},
 
@@ -22,7 +23,7 @@
 
         Controls.onChanged(() => {
             lastPromise = lastAggPromise = null;
-            getAggregatedSamples();
+            getSamples();
         });
     }
 
@@ -90,7 +91,7 @@
             lastZoom = zoom;
             request = ++activeRequest;
 
-            lastAggPromise = getSamples(results => {
+            lastAggPromise = getSampleResults(results => {
                 if (request === activeRequest) {
                     trigger('new', {
                         samples: bucketResults(results),
@@ -102,7 +103,7 @@
                 checkRequest(request)
 
                 var agg;
-                if (results.redraw) {
+                if (results.complete) {
                     buckets = {};
                     numAggSamples = 0;
                     agg = bucketResults(results);
@@ -119,6 +120,18 @@
 
         lastAggPromise.then(trigger('update'));
         return lastAggPromise;
+    }
+
+    function getNonAggregatedSamples() {
+        var prom = getSampleResults(trigger('new'));
+        prom.then(trigger('update'))
+        return prom;
+    }
+
+    function getSamples(zoom) {
+        return AGGREGATE_SAMPLES ?
+            getAggregatedSamples(zoom) :
+            getNonAggregatedSamples();
     }
 
     function mergeSampleBucket(bucket) {
@@ -139,7 +152,7 @@
         return Object.values(samples);
     }
 
-    function getSamples(onData) {
+    function getSampleResults(onData) {
         if (lastPromise !== null) {
             lastPromise.then(results =>
                 console.debug('Re-serving %d samples from previous request',
@@ -188,7 +201,7 @@
 
                 console.debug('Collected a total of %d samples', samples.length);
 
-                return { samples, first: false };
+                return { samples, complete: true };
             }, () => console.error('Ignored old request'));
 
         return lastPromise;
@@ -299,7 +312,6 @@
     Object.assign(Samples, {
         init,
         getSamples,
-        getAggregatedSamples,
 
         onNew: on('new'),
         onUpdate: on('update'),

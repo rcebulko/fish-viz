@@ -59,7 +59,7 @@
                 TaxonomyTree.onFocused(restyleFocus);
             }).then(() => {
                 loading(true);
-                Samples.getAggregatedSamples(map.getZoom());
+                Samples.getSamples(map.getZoom());
             }).then(initHistory);
     }
 
@@ -132,7 +132,7 @@
 
         google.maps.event.addListener(map, 'center_changed', throttle(() => {
             loading(true);
-            Samples.getAggregatedSamples();
+            Samples.getSamples();
         }, PAN_THROTTLE_MS));
     }
 
@@ -141,7 +141,7 @@
         google.maps.event.addListener(map, 'idle', () => {
             if (zoomed) {
                 loading(true);
-                Samples.getAggregatedSamples(map.getZoom());
+                Samples.getSamples(map.getZoom());
                 zoomed = false;
             }
         });

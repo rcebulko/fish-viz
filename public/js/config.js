@@ -7,13 +7,15 @@
         initRegion: 'FLA KEYS',
 
         // maximum number of enabled species to display at once
-        maxEnabledSpecies: 10,
+        maxEnabledSpecies: 20,
 
         // enable species-level sample caching
         speciesSampleCache: true,
+        // enable dynamic sample aggregation
+        aggregateSamples: true,
 
         // density of aggregated samples [1-10]
-        sampleBucketDensity: 6,
+        sampleBucketDensity: 9,
 
         // maximum number of history/future states to track; 0 for no limit
         maxHistory: 20,
