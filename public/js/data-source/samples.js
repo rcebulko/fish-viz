@@ -92,7 +92,11 @@
 
             lastAggPromise = getSamples(results => {
                 if (request === activeRequest) {
-                    trigger('new', { samples: bucketResults(results) });
+                    trigger('new', {
+                        samples: bucketResults(results),
+                        complete: false,
+                        request,
+                    });
                 }
             }).then(results => {
                 checkRequest(request)
@@ -109,7 +113,7 @@
                 console.info('Aggregated %d samples to %d',
                     results.samples.length, agg.length);
 
-                return { samples: agg, redraw: true }
+                return { samples: agg, complete: true, request }
             }, () => console.error('Ignored old request'));
         }
 

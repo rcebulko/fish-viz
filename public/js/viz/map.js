@@ -15,6 +15,8 @@
 
         $mapWrapper = $(),
         map, mapNode, bounds, overlay, lasso,
+        lastResult = -1,
+        lastPartialResult = -1,
 
         isLoading = false,
         loading = state => {
@@ -128,14 +130,17 @@
             }
         });
 
-        google.maps.event.addListener(map, 'center_changed', throttle(() =>
-            Samples.getAggregatedSamples(), PAN_THROTTLE_MS));
+        google.maps.event.addListener(map, 'center_changed', throttle(() => {
+            loading(true);
+            Samples.getAggregatedSamples();
+        }, PAN_THROTTLE_MS));
     }
 
     function initZoom() {
         var zoomed = false;
         google.maps.event.addListener(map, 'idle', () => {
             if (zoomed) {
+                loading(true);
                 Samples.getAggregatedSamples(map.getZoom());
                 zoomed = false;
             }
@@ -215,31 +220,46 @@
 
 
     // sample pruning and merging
-    function geoPruneSamples(samples) {
-        var view = map.getBounds().toJSON(),
+    function geoFilter(samples) {
+        var bounds = map.getBounds(),
+            view,
+            height, width,
+            expandedBounds,
+            i, key;
 
-            height = view.north - view.south,
-            width = view.east - view.west,
+        if (typeof bounds === 'undefined') {
+            return samples;
+        } else {
+            view = map.getBounds().toJSON();
+
+            height = view.north - view.south;
+            width = view.east - view.west;
 
             expandedBounds = new google.maps.LatLngBounds(
                 { lat: view.south - height, lng: view.west - width },
                 { lat: view.north + height, lng: view.east + width },
-            ),
-            i, key;
+            );
 
-        return samples.filter(s =>
+            return samples.filter(s =>
                 expandedBounds.contains({ lat: s.latitude, lng: s.longitude }));
+        }
     }
 
     function drawNewSamples(results) {
-        var samples = geoPruneSamples(results.samples),
+        if ((results.complete && results.request <= lastResult) ||
+            (!results.complete && results.request <= lastPartialResult)) return;
+        lastPartialResult = results.request;
+        if (results.complete) lastResult = lastPartialResult;
+
+        var samples = geoFilter(results.samples),
             nodes = overlay.children().data(samples, d => d.id),
             newNodes = nodes.enter().append('svg').classed('sample', true);
+
 
         loading(true);
         console.debug('Drawing %d new samples', samples.length);
 
-        if (results.redraw) {
+        if (results.complete) {
             nodes.exit()
                 .transition()
                 .delay(1000)
@@ -278,8 +298,6 @@
             .on('mouseover', tip.show)
             .on('mouseout', tip.hide)
             .attr('r', 0)
-        // newNodes.selectAll('.sample-marker')
-            // .attr('')
     }
 
     function restyleFocus(inFocus) {
@@ -303,20 +321,34 @@
         function MapState () {
             this.name = 'MapState';
             this.listeners = [];
+            this.state = {};
             google.maps.event.addListener(map, 'bounds_changed', () =>
-                !this.isWriting && this.triggerChanged());
+                !this.isWriting &&
+                this.isChanged() &&
+                this.triggerChanged());
         }
 
         MapState.prototype.getState = function () {
-            return { center: map.getCenter(), zoom: map.getZoom() }
+            return { center: map.getCenter().toJSON(), zoom: map.getZoom() }
         };
 
         MapState.prototype.setState = function (newState) {
             this.isWriting = true;
+            this.state = newState;
             map.panTo(newState.center);
             map.setZoom(newState.zoom);
             this.isWriting = false;
         };
+
+        MapState.prototype.isChanged = function () {
+            var newState = this.getState(),
+
+                center = this.state.center,
+                newCenter = newState.center;
+
+            return this.state.zoom !== newState.zoom || Object.keys(newCenter)
+                .some(key => newCenter[key] !== center[key]);
+        }
 
         MapState.prototype.triggerChanged = debounce(function () {
             this.listeners.forEach(cb => cb());
@@ -333,6 +365,7 @@
     Object.assign(Map, {
         init,
         mapLoaded,
+        isLoading: () => isLoading,
 
         getMap: () => map,
     });
