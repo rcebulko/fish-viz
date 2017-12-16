@@ -148,12 +148,8 @@
             possibleClass = 'lasso-possible',
             selectedClass = 'lasso-selected',
 
-            willSelectClass = state => {
-                return d => {
-                    console.log(d);
-                    return Controls.LassoSelect.willSelect(d.id, state);
-                }
-            };
+            willSelectClass = state =>
+                d => Controls.LassoSelect.willSelect(d.id, state);
 
         lasso = d3.lasso()
             .targetArea(d3.select('.lasso-overlay'))
@@ -185,6 +181,7 @@
             });
 
         d3.select('.lasso-overlay').call(lasso)
+        updateSummaries([]);
     }
 
     function updateSummaries(selection) {
@@ -192,19 +189,25 @@
 
         selection.forEach(s => {
             counts[s.species.id()] = (counts[s.species.id()] || 0) +
-                (s.aggregated ? s.count : 1)
+                s.aggregated().totalNumber
         });
 
         $summs = $('.summaries');
         if (Object.keys(counts).length) {
             $summs.html('');
             Object.keys(counts).forEach(id => {
-                $summs.append('<div class="summary"><i>' +
-                    Taxonomy.species[id] +
+                $summs.append('<li class="summary">' +
+                    '<span class="drag-handle">☰</span><i>' +
+                    Taxonomy.species[id].name() +
                     ':</i> ' +
                     counts[id] +
-                    '</div>')
+                    '<svg class="summary-viz"></svg>' +
+                    '</li>')
             });
+
+            Sortable.create($summs[0], {
+                animation: 250
+            })
         } else {
             $summs.html('No data selected')
         }
