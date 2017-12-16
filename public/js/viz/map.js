@@ -52,10 +52,7 @@
 
                 Controls.Region.onChanged(fitRegion);
                 Samples.onNew(drawNewSamples);
-                Samples.onUpdate(results => {
-                    drawNewSamples(results);
-                    loading(false)
-                });
+                Samples.onUpdate(drawNewSamples);
                 TaxonomyTree.onFocused(restyleFocus);
             }).then(() => {
                 loading(true);
@@ -247,23 +244,23 @@
 
     function drawNewSamples(results) {
         if ((results.complete && results.request <= lastResult) ||
-            (!results.complete && results.request <= lastPartialResult)) return;
+            results.request < lastPartialResult) return;
+
         lastPartialResult = results.request;
         if (results.complete) lastResult = lastPartialResult;
 
         var samples = geoFilter(results.samples),
             nodes = overlay.children().data(samples, d => d.id),
-            newNodes = nodes.enter().append('svg').classed('sample', true);
-
+            newNodes = nodes.enter().append('svg').classed('sample', true),
+            exitNodes = nodes.exit();
 
         loading(true);
         console.debug('Drawing %d new samples', samples.length);
 
         if (results.complete) {
-            nodes.exit()
-                .transition()
-                .delay(1000)
-                .remove();
+            setTimeout(() => {
+                if (results.request === lastPartialResult) exitNodes.remove()
+            }, 1000);
             nodes.exit()
                 .selectAll('.sample-marker')
                 .transition()
@@ -280,6 +277,8 @@
 
         lasso.items(nodes.merge(newNodes));
         restyleFocus();
+
+        loading(!results.complete)
     }
 
     function drawNewNodes(newNodes) {
