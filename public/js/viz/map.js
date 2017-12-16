@@ -52,7 +52,10 @@
 
                 Controls.Region.onChanged(fitRegion);
                 Samples.onNew(drawNewSamples);
-                Samples.onUpdate(drawNewSamples);
+                Samples.onUpdate(results => {
+                    drawNewSamples(results);
+                    loading(false);
+                });
                 TaxonomyTree.onFocused(restyleFocus);
             }).then(() => {
                 loading(true);
@@ -277,8 +280,6 @@
 
         lasso.items(nodes.merge(newNodes));
         restyleFocus();
-
-        loading(!results.complete)
     }
 
     function drawNewNodes(newNodes) {
