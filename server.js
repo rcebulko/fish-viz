@@ -1,6 +1,7 @@
 var http = require('http'),
     sqlRouter = require('sequelize-router'),
 
+    compression = require('compression'),
     express = require('express'),
     app = express(),
 
@@ -20,7 +21,8 @@ function start(port) {
 
 
 // establish API endpoints for each model
-app.use('/api', sqlRouter(schema.Species));
+app.use(compression());
+app.use('/api', sqlR  outer(schema.Species));
 app.use('/api', sqlRouter(schema.Sample, {
     find: (req, res) => {
         var limit = req.query.limit,
